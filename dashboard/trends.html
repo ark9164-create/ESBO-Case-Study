@@ -1,0 +1,2571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence — Trends & Patterns</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* =============================================================
+   TRENDS & PATTERNS — page-specific components
+   Hero, KPI strip, movements bar chart, top movers table,
+   focus panel (tour-time curve with before/after)
+   ============================================================= */
+
+/* ── Eyebrow above page ─────────────────────────────────────── */
+.mv-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.55rem;
+}
+.mv-eyebrow::before,
+.mv-eyebrow::after {
+  content: '';
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim) 50%, transparent);
+}
+.mv-eyebrow::before { width: 38px; }
+.mv-eyebrow::after  { flex: 1; max-width: 180px; }
+
+.mv-hed {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+.mv-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  max-width: 760px;
+  line-height: 1.55;
+  margin-bottom: 1.1rem;
+}
+.mv-sub strong { color: var(--text-primary); font-weight: 600; }
+
+/* ── KPI stat-row tailored ───────────────────────────────────── */
+.mv-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+.mv-kpi {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.15rem 1.1rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s;
+}
+.mv-kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, var(--gold-dim) 40%, var(--gold-dim) 60%, transparent 95%);
+  opacity: 0.55;
+}
+.mv-kpi:hover { border-color: var(--gold-border); }
+.mv-kpi-kicker {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.mv-kpi-kicker::before {
+  content: ''; width: 14px; height: 1px;
+  background: var(--gold); opacity: 0.5;
+  flex-shrink: 0;
+}
+.mv-kpi-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+}
+.mv-kpi-value.up   { color: var(--up);   }
+.mv-kpi-value.down { color: var(--down); }
+.mv-kpi-value.gold { color: var(--gold); }
+.mv-kpi-sub {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+.mv-kpi-sub strong { color: var(--text-primary); font-weight: 600; }
+
+/* ── Movements bar chart + top movers table ────────────── */
+.movers-table {
+  display: flex;
+  flex-direction: column;
+}
+.movers-head {
+  display: grid;
+  grid-template-columns: 48px minmax(150px,1.25fr) minmax(120px,0.9fr) minmax(110px,0.8fr) minmax(100px,0.8fr) minmax(92px,0.7fr) 32px;
+  gap: 0.75rem;
+  padding: 0.7rem 1.35rem;
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(255,255,255,0.012);
+}
+
+.mover-row {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.mover-row:last-child { border-bottom: none; }
+
+.mover-summary {
+  display: grid;
+  grid-template-columns: 48px minmax(150px,1.25fr) minmax(120px,0.9fr) minmax(110px,0.8fr) minmax(100px,0.8fr) minmax(92px,0.7fr) 32px;
+  gap: 0.75rem;
+  padding: 0.9rem 1.35rem;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.14s;
+}
+.mover-summary::-webkit-details-marker { display: none; }
+.mover-summary:hover { background: rgba(255,255,255,0.025); }
+details[open] > .mover-summary {
+  background: var(--gold-subtle);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.mover-rank {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--gold-dim);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+details[open] .mover-rank { color: var(--gold); }
+
+.mover-date { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.mover-date .md-primary {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.mover-date .md-sub {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mover-date .md-meta {
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.mover-venues { display: inline-flex; gap: 0.3rem; flex-wrap: wrap; }
+.mv-venue-chip {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.18rem 0.5rem 0.18rem 1.05rem;
+  border-radius: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  position: relative;
+  white-space: nowrap;
+}
+.mv-venue-chip::before {
+  content: '';
+  position: absolute;
+  left: 0.45rem; top: 50%;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset;
+}
+.mv-venue-chip.esb::before    { background: var(--esb);    }
+.mv-venue-chip.edge::before   { background: var(--edge);   }
+.mv-venue-chip.summit::before { background: var(--summit); }
+.mv-venue-chip.totr::before   { background: var(--totr);   }
+
+.mover-moves {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.mover-moves strong {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.mover-net, .mover-avg {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.mover-net { font-size: 0.92rem; }
+.mover-avg { font-size: 0.78rem; }
+.mover-net.up,   .mover-avg.up   { color: var(--up);   }
+.mover-net.down, .mover-avg.down { color: var(--down); }
+.mover-net.flat, .mover-avg.flat { color: var(--text-dim); }
+
+.mover-chevron {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  transition: transform 0.2s, color 0.2s;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+details[open] .mover-chevron { transform: rotate(180deg); color: var(--gold); }
+
+.mover-expand {
+  --mover-expand-cols: 90px minmax(170px,1.2fr) minmax(180px,1fr) 96px;
+  padding: 0.25rem 1.35rem 1.2rem 3.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: linear-gradient(180deg, rgba(32,28,20,0.96), rgba(19,17,9,0.98));
+  border-top: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.mover-expand-head {
+  display: grid;
+  grid-template-columns: var(--mover-expand-cols);
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.45rem 0.85rem 0.35rem;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: linear-gradient(180deg, rgba(32,28,20,0.98), rgba(32,28,20,0.92));
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.mover-expand-list {
+  max-height: 420px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  padding: 0.15rem 0 0;
+}
+.mv-change {
+  display: grid;
+  grid-template-columns: var(--mover-expand-cols);
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.68rem 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  margin-bottom: 0.45rem;
+}
+.mv-change:last-child { margin-bottom: 0; }
+.mv-change:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--gold-border);
+}
+
+.mv-change-venue {
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.17rem 0.5rem 0.17rem 1rem;
+  border-radius: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  position: relative;
+  justify-self: start;
+  white-space: nowrap;
+}
+.mv-change-venue::before {
+  content: '';
+  position: absolute;
+  left: 0.4rem; top: 50%;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+.mv-change-venue.esb::before    { background: var(--esb);    }
+.mv-change-venue.edge::before   { background: var(--edge);   }
+.mv-change-venue.summit::before { background: var(--summit); }
+.mv-change-venue.totr::before   { background: var(--totr);   }
+
+.mv-change-time {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+.mv-change-time-primary {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.mv-change-time-meta {
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.mv-change-prices {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  justify-self: start;
+}
+.mv-change-old {
+  color: var(--text-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-dim);
+}
+.mv-change-arrow { color: var(--text-dim); }
+.mv-change-new { font-weight: 700; color: var(--text-primary); }
+.mv-change-new.up   { color: var(--up);   }
+.mv-change-new.down { color: var(--down); }
+
+.mv-change-delta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.16rem 0.5rem;
+  border-radius: 3px;
+  min-width: 96px;
+  text-align: center;
+  justify-self: end;
+}
+.mv-change-delta.up   { background: var(--up-bg);   color: var(--up);   border: 1px solid var(--up-border);   }
+.mv-change-delta.down { background: var(--down-bg); color: var(--down); border: 1px solid var(--down-border); }
+
+[data-theme="light"] .mover-expand {
+  background: linear-gradient(180deg, rgba(219,205,172,0.98), rgba(209,193,156,0.98));
+  border-top-color: rgba(56,38,8,0.16);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+}
+[data-theme="light"] .mover-expand-head {
+  background: linear-gradient(180deg, rgba(214,199,164,0.98), rgba(214,199,164,0.92));
+  color: rgba(92,69,19,0.72);
+}
+[data-theme="light"] .mv-change {
+  background: rgba(245,239,224,0.72);
+  border-color: rgba(92,69,19,0.11);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+}
+[data-theme="light"] .mv-change:hover {
+  background: rgba(248,243,230,0.92);
+  border-color: rgba(161,122,31,0.22);
+}
+
+.movers-empty {
+  padding: 3rem 1.35rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+.movers-empty .ce-icon {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.1em;
+}
+
+/* ── Status Changes Table ───────────────────────────────────── */
+.status-table { padding: 0.25rem 1rem 0.5rem; }
+.status-summary {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.status-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.status-stat .ss-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.status-stat.reopened .ss-icon { background: rgba(52,211,153,0.15); color: #34d399; }
+.status-stat.soldout .ss-icon { background: rgba(248,113,113,0.15); color: #f87171; }
+.status-stat .ss-count {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sf-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sf-btn:hover { border-color: var(--gold-border); color: var(--text-primary); }
+.sf-btn.active { background: var(--gold-subtle); border-color: var(--gold); color: var(--gold); }
+
+.status-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.4rem;
+}
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  transition: border-color 0.15s;
+}
+.status-item:hover { border-color: var(--gold-border); }
+.status-item .si-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-item.reopened .si-indicator { background: #34d399; }
+.status-item.soldout .si-indicator { background: #f87171; }
+.status-item .si-venue {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.12rem 0.4rem;
+  border-radius: 3px;
+  background: var(--bg-surface);
+  color: var(--text-dim);
+}
+.status-item .si-date {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.status-item .si-time {
+  color: var(--text-dim);
+  margin-left: auto;
+}
+.status-item .si-price {
+  font-family: var(--font-mono);
+  color: var(--gold);
+  font-weight: 500;
+}
+
+/* Note strip below everything */
+.mv-footnote {
+  margin-top: 0.85rem;
+  padding: 0.9rem 1.2rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  text-align: center;
+  border-top: 1px solid var(--border-subtle);
+}
+.mv-footnote strong { color: var(--text-secondary); }
+
+/* ── Filterable chart section ────────────────────────────── */
+.chart-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  position: relative;
+}
+.chart-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, var(--gold-dim) 40%, var(--gold-dim) 60%, transparent 95%);
+  opacity: 0.55;
+}
+.cs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.05rem 1.35rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.collapsible-section > summary.cs-head { cursor: pointer; list-style: none; }
+.collapsible-section > summary.cs-head::-webkit-details-marker { display: none; }
+.collapsible-section > summary.cs-head:hover { background: rgba(201,168,76,0.04); }
+.cs-chevron {
+  font-size: 0.7rem;
+  color: var(--gold);
+  transition: transform 0.2s;
+  margin-left: auto;
+}
+.collapsible-section:not([open]) .cs-chevron { transform: rotate(-90deg); }
+.collapsible-section[open] .cs-chevron { transform: rotate(0deg); }
+.cs-title-wrap { display: flex; flex-direction: column; gap: 0.2rem; }
+.cs-eyebrow {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.cs-eyebrow .bar {
+  width: 3px; height: 12px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+.cs-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-primary);
+}
+.cs-sub {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
+/* Venue chip toggles (shared) */
+.venue-chips {
+  display: inline-flex;
+  gap: 0.42rem;
+  flex-wrap: wrap;
+}
+.venue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.36rem 0.7rem 0.36rem 0.55rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.14s, border-color 0.14s, background 0.14s, opacity 0.18s;
+  opacity: 0.55;
+}
+.venue-chip .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.45) inset;
+}
+.venue-chip:hover { color: var(--text-secondary); border-color: var(--border-md); opacity: 0.85; }
+.venue-chip.active { color: var(--text-primary); opacity: 1; border-color: var(--gold-border); background: var(--gold-subtle); }
+.venue-chip .dot.esb    { background: var(--esb);    }
+.venue-chip .dot.edge   { background: var(--edge);   }
+.venue-chip .dot.summit { background: var(--summit); }
+.venue-chip .dot.totr   { background: var(--totr);   }
+
+/* Filter row */
+.cs-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.35rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.005));
+}
+.cs-filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.cs-filter-label {
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.cs-select {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.42rem 0.7rem;
+  cursor: pointer;
+  min-width: 220px;
+  transition: border-color 0.14s, color 0.14s;
+}
+.cs-select:hover { border-color: var(--border-md); }
+.cs-select:focus { outline: none; border-color: var(--gold-border); }
+
+.range-pills {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+.range-pill {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.32rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.14s, background 0.18s;
+  white-space: nowrap;
+}
+.range-pill:hover { color: var(--text-secondary); }
+.range-pill.active {
+  background: var(--gold);
+  color: #0b0905;
+}
+
+/* Chart body */
+.cs-body {
+  padding: 1.1rem 1.35rem 1.35rem;
+}
+.cs-chart-wrap {
+  position: relative;
+  height: 300px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.cs-chart-inner {
+  position: relative;
+  height: 100%;
+  min-width: 100%;
+}
+.cs-chart-wrap canvas {
+  display: block;
+}
+.cs-chart-caption {
+  margin-top: 0.75rem;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.55;
+}
+.cs-chart-caption .em { color: var(--text-secondary); }
+
+.cs-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-subtle) 20%, var(--border-subtle) 80%, transparent);
+  margin: 0.25rem 0;
+}
+
+/* Two-chart vertical stack inside one section */
+.cs-stack > * + * {
+  border-top: 1px solid var(--border-subtle);
+}
+.cs-stack-item {
+  padding: 1.1rem 1.35rem 1.25rem;
+}
+.cs-stack-item h3 {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.55rem;
+}
+
+/* ── Focus panel — per-venue detail strip above the curve ──── */
+.focus-section { margin-top: 1.35rem; }
+.focus-section .cs-title { font-size: 1.15rem; }
+.focus-detail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, rgba(201,168,76,0.03), transparent 80%);
+}
+.focus-venue {
+  padding: 1.05rem 1.15rem 1.1rem 1.3rem;
+  border-right: 1px solid var(--border-subtle);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  transition: opacity 0.2s;
+}
+.focus-venue:last-child { border-right: none; }
+.focus-venue.dim { opacity: 0.38; }
+.focus-venue::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  opacity: 0.75;
+}
+.focus-venue.esb::before    { background: var(--esb);    }
+.focus-venue.edge::before   { background: var(--edge);   }
+.focus-venue.summit::before { background: var(--summit); }
+.focus-venue.totr::before   { background: var(--totr);   }
+.focus-venue-name {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.focus-venue-name .fv-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.45) inset;
+}
+.focus-venue.esb .fv-dot    { background: var(--esb);    }
+.focus-venue.edge .fv-dot   { background: var(--edge);   }
+.focus-venue.summit .fv-dot { background: var(--summit); }
+.focus-venue.totr .fv-dot   { background: var(--totr);   }
+.focus-venue-price {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+.focus-venue-price.na {
+  color: var(--text-dim);
+  font-size: 1.1rem;
+}
+.focus-venue-delta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+.focus-venue-delta.up   { color: var(--up);   }
+.focus-venue-delta.down { color: var(--down); }
+.focus-venue-delta.flat { color: var(--text-dim); font-weight: 500; }
+.focus-venue-sub {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  margin-top: auto;
+  text-transform: uppercase;
+}
+.focus-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 1.35rem 0.25rem;
+  margin-top: -0.4rem;
+}
+.focus-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+.focus-legend-swatch {
+  display: inline-block;
+  width: 22px; height: 0;
+  border-top: 2.5px solid var(--gold);
+}
+.focus-legend-swatch.dashed {
+  border-top: 2px dashed var(--text-secondary);
+}
+
+/* ── Pulse strip — who's moving, who's holding ─────────────── */
+.pulse-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 0.7rem;
+  margin-bottom: 1.05rem;
+}
+.pulse-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.7rem 0.9rem 0.8rem 1.05rem;
+  overflow: hidden;
+  transition: border-color 0.18s, background 0.18s;
+}
+.pulse-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  opacity: 0.9;
+}
+.pulse-card.esb::before    { background: var(--esb);    }
+.pulse-card.edge::before   { background: var(--edge);   }
+.pulse-card.summit::before { background: var(--summit); }
+.pulse-card.totr::before   { background: var(--totr);   }
+.pulse-card.active {
+  border-color: var(--gold-border);
+  background: linear-gradient(180deg, var(--gold-subtle), var(--bg-card) 85%);
+}
+.pulse-card.quiet { opacity: 0.72; }
+.pulse-card.quiet::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    rgba(255,255,255,0.015) 6px 7px
+  );
+  pointer-events: none;
+}
+.pulse-name {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+.pulse-status {
+  font-family: var(--font-mono);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.01em;
+}
+.pulse-status.held {
+  font-size: 0.74rem;
+  letter-spacing: 0.22em;
+  color: var(--gold-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.pulse-status.held::before {
+  content: '';
+  width: 12px; height: 1px;
+  background: var(--gold-dim);
+  opacity: 0.8;
+}
+.pulse-sub {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+}
+.pulse-sub strong { color: var(--text-secondary); font-weight: 600; }
+.pulse-sub .up   { color: var(--up);   }
+.pulse-sub .down { color: var(--down); }
+
+/* ── Two-mode split panel — full-day vs surgical ───────────── */
+.two-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.two-mode .tm-col + .tm-col {
+  border-left: 1px solid var(--border-subtle);
+}
+.tm-col { padding: 1.05rem 1.3rem 1.15rem; }
+.tm-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+.tm-mode {
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 0.16rem 0.4rem;
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-border);
+  border-radius: 3px;
+}
+.tm-title {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+.tm-sub {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  margin-left: auto;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+.tm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+.tm-row {
+  display: grid;
+  grid-template-columns: minmax(100px,1fr) minmax(72px,auto) minmax(72px,auto);
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.018);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+.tm-row:hover {
+  border-color: var(--gold-border);
+  background: rgba(255,255,255,0.035);
+}
+.tm-row.active {
+  background: var(--gold-subtle);
+  border-color: var(--gold-border);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.tm-row:focus-visible {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-subtle);
+}
+.tr-date {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.tr-primary {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.tr-dow {
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tr-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  text-align: center;
+  justify-self: center;
+}
+.tr-count .tr-n {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.tr-count .tr-unit {
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tr-net {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: right;
+  justify-self: end;
+  letter-spacing: 0.01em;
+}
+.tr-net.up { color: var(--up); }
+.tr-net.down { color: var(--down); }
+.tr-net.flat { color: var(--text-dim); }
+.tm-empty {
+  padding: 1.4rem 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: center;
+  font-style: italic;
+  line-height: 1.5;
+}
+.tm-caption {
+  padding: 0.85rem 1.3rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.66rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  text-align: center;
+}
+.tm-caption .em { color: var(--text-secondary); }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .mv-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .pulse-strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .two-mode { grid-template-columns: 1fr; }
+  .two-mode .tm-col + .tm-col {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .cs-head { flex-direction: column; align-items: flex-start; }
+  .cs-filter-row { gap: 0.75rem; }
+  .cs-select { min-width: 180px; }
+  .focus-detail { grid-template-columns: repeat(2, 1fr); }
+  .focus-venue:nth-child(-n+2) { border-bottom: 1px solid var(--border-subtle); }
+  .focus-venue:nth-child(2) { border-right: none; }
+}
+@media (max-width: 640px) {
+  .focus-detail { grid-template-columns: 1fr; }
+  .focus-venue { border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  .focus-venue:last-child { border-bottom: none; }
+}
+@media (max-width: 900px) {
+  .movers-head { display: none; }
+  .mover-summary {
+    grid-template-columns: 40px 1fr 1fr;
+    grid-template-areas:
+      "rank date net"
+      "rank venues avg"
+      "rank moves chev";
+    gap: 0.4rem 0.6rem;
+  }
+  .mover-rank    { grid-area: rank; align-self: start; }
+  .mover-date    { grid-area: date; }
+  .mover-venues  { grid-area: venues; }
+  .mover-moves   { grid-area: moves; font-size: 0.66rem; }
+  .mover-net     { grid-area: net; text-align: right; font-size: 0.85rem; }
+  .mover-avg     { grid-area: avg; text-align: right; font-size: 0.7rem; }
+  .mover-chevron { grid-area: chev; text-align: right; }
+  .mover-expand  { padding-left: 1.2rem; }
+  .mover-expand { --mover-expand-cols: 80px minmax(0,1fr) 96px; }
+  .mover-expand-head { display: none; }
+  .mover-expand-list { max-height: 360px; }
+  .mv-change     { gap: 0.5rem; }
+  .mv-change-prices { grid-column: 2 / 3; }
+  .mv-change-delta { grid-column: 1 / -1; justify-self: start; margin-top: 0.2rem; }
+}
+@media (max-width: 720px) {
+  .cs-filter-group { flex-wrap: wrap; }
+  .venue-chips { gap: 0.3rem; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap" aria-hidden="true">
+          <div class="brand-diamond"></div>
+          <div class="brand-rule"></div>
+        </div>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <div class="sidebar-sub">Price Intelligence</div>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+        <a href="index.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+          Executive Overview
+        </a>
+        <a href="tracker.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="2" width="14" height="13" rx="1.5"/>
+            <line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+          </svg>
+          Price Tracker
+        </a>
+        <a href="sunset.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v1.5"/><path d="M12.24 4.76l-1.06 1.06"/>
+            <path d="M3.76 4.76l1.06 1.06"/><path d="M3 10h10"/><path d="M5 13h6"/>
+            <path d="M4.5 10A3.5 3.5 0 0 1 11.5 10"/><path d="M1 10h2M13 10h2"/>
+          </svg>
+          Sunset Analysis
+        </a>
+        <a href="trends.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 11 5 7 9 9 15 3"/>
+            <line x1="1" y1="15" x2="15" y2="15"/>
+          </svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 1H3a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 3 15h10a1.5 1.5 0 0 0 1.5-1.5V7L9 1z"/>
+            <polyline points="9 1 9 7 14.5 7"/>
+            <line x1="5" y1="10" x2="11" y2="10"/><line x1="5" y1="12.5" x2="8.5" y2="12.5"/>
+          </svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <div class="status-dot live"></div>
+        <span class="status-label">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="sidebarTs">Last updated: —</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Trends &amp; Patterns</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate">—</span>
+        <button class="theme-toggle" id="themeToggle" title="Toggle light / dark mode" aria-label="Toggle light/dark mode">
+          <svg id="themeIcon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.7a1 1 0 11-1.41-1.41l.7-.71zM18 9a1 1 0 110 2h-1a1 1 0 110-2h1zm-1.78 5.78a1 1 0 010 1.42l-.7.7a1 1 0 11-1.42-1.41l.71-.71a1 1 0 011.41 0zM11 16a1 1 0 11-2 0v-1a1 1 0 112 0v1zm-5.78-.78a1 1 0 01-1.41 0l-.71-.7a1 1 0 011.41-1.42l.71.71a1 1 0 010 1.41zM4 10a1 1 0 110-2H3a1 1 0 110 2h1zm1.22-6.22a1 1 0 010 1.41l-.71.71A1 1 0 013.1 4.49l.7-.71a1 1 0 011.42 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Page header -->
+      <div class="mv-eyebrow">Trends &amp; Patterns</div>
+      <h2 class="mv-hed">Market Movement</h2>
+      <p class="mv-sub">
+        List prices look static. <strong>Tour-time prices shift constantly</strong>.
+        Two modes: <strong>full-day reprices</strong> on peak dates, <strong>surgical tweaks</strong> on near-term inventory.
+        Click any date for the tour-time curve.
+      </p>
+
+      <!-- PULSE STRIP — per-attraction movement status -->
+      <div class="pulse-strip" id="pulseStrip" aria-label="Attraction movement status"></div>
+
+      <!-- KPI ROW -->
+      <div class="mv-kpis" id="kpiRow">
+        <div class="mv-kpi fade-up">
+          <div class="mv-kpi-kicker">Total Moves</div>
+          <div class="mv-kpi-value gold" id="kpi-total">—</div>
+          <div class="mv-kpi-sub" id="kpi-total-sub">—</div>
+        </div>
+        <div class="mv-kpi fade-up anim-d1">
+          <div class="mv-kpi-kicker">Net Direction</div>
+          <div class="mv-kpi-value" id="kpi-net">—</div>
+          <div class="mv-kpi-sub" id="kpi-net-sub">—</div>
+        </div>
+        <div class="mv-kpi fade-up anim-d2">
+          <div class="mv-kpi-kicker">Travel Dates Moved</div>
+          <div class="mv-kpi-value" id="kpi-dates">—</div>
+          <div class="mv-kpi-sub" id="kpi-dates-sub">—</div>
+        </div>
+        <div class="mv-kpi fade-up anim-d3">
+          <div class="mv-kpi-kicker">Biggest Single Move</div>
+          <div class="mv-kpi-value" id="kpi-big">—</div>
+          <div class="mv-kpi-sub" id="kpi-big-sub">—</div>
+        </div>
+      </div>
+
+      <!-- TWO-MODE SPLIT — full-day reprices vs surgical adjustments -->
+      <details class="chart-section fade-up anim-d3 collapsible-section">
+        <summary class="cs-head">
+          <div class="cs-title-wrap">
+            <div class="cs-eyebrow"><span class="bar"></span>Two Modes</div>
+            <div class="cs-title">Two Pricing Playbooks</div>
+            <div class="cs-sub">Full-day = tier shifts across dozens of tour times. Surgical = pinpoint moves on a few tour times. Click a row to focus.</div>
+          </div>
+          <span class="cs-chevron">▼</span>
+        </summary>
+        <div class="two-mode" id="twoModeSplit"></div>
+        <div class="tm-caption" id="moveCaption"></div>
+      </details>
+
+      <!-- TOP MOVERS TABLE -->
+      <details class="chart-section fade-up anim-d4 collapsible-section">
+        <summary class="cs-head">
+          <div class="cs-title-wrap">
+            <div class="cs-eyebrow"><span class="bar"></span>By Date</div>
+            <div class="cs-title">Movers by Magnitude</div>
+            <div class="cs-sub">Click a row to see each tour-time move.</div>
+          </div>
+          <span class="cs-chevron">▼</span>
+        </summary>
+        <div class="movers-table" id="moversTable">
+          <div class="movers-empty"><div class="ce-icon">—</div>Loading…</div>
+        </div>
+      </details>
+
+      <!-- STATUS CHANGES (sold out / reopened) -->
+      <details class="chart-section fade-up anim-d4 collapsible-section">
+        <summary class="cs-head">
+          <div class="cs-title-wrap">
+            <div class="cs-eyebrow"><span class="bar"></span>Availability</div>
+            <div class="cs-title">Status Changes</div>
+            <div class="cs-sub">Tour times that sold out or reopened (no price change).</div>
+          </div>
+          <span class="cs-chevron">▼</span>
+        </summary>
+        <div class="status-table" id="statusTable">
+          <div class="movers-empty"><div class="ce-icon">—</div>Loading…</div>
+        </div>
+      </details>
+
+      <!-- FOCUS PANEL — tour-time price curve for one travel date / week -->
+      <div class="chart-section focus-section fade-up">
+        <div class="cs-head">
+          <div class="cs-title-wrap">
+            <div class="cs-eyebrow"><span class="bar"></span>Focus</div>
+            <div class="cs-title">Tour-Time Price Curve</div>
+            <div class="cs-sub">One line per attraction. Dashed = prior price at each reprice.</div>
+          </div>
+          <div class="venue-chips" id="focusVenueChips" role="group" aria-label="Attractions"></div>
+        </div>
+        <div class="cs-filter-row">
+          <div class="cs-filter-group">
+            <span class="cs-filter-label">Mode</span>
+            <div class="range-pills" role="tablist" aria-label="Focus mode">
+              <button class="range-pill active" data-fmode="date">Single date</button>
+              <button class="range-pill"        data-fmode="week">Travel week</button>
+            </div>
+          </div>
+          <div class="cs-filter-group">
+            <span class="cs-filter-label" id="focusSelectLabel">Travel date</span>
+            <select class="cs-select" id="focusSelect" aria-label="Travel focus"></select>
+          </div>
+        </div>
+        <div class="focus-detail" id="focusDetail"></div>
+        <div class="cs-body">
+          <div class="cs-chart-wrap" id="focusChartWrap" style="height:380px">
+            <div class="cs-chart-inner" id="focusChartInner">
+              <canvas id="focusChart"></canvas>
+            </div>
+          </div>
+          <div class="focus-legend" aria-hidden="true">
+            <span class="focus-legend-item"><span class="focus-legend-swatch"></span>Current</span>
+            <span class="focus-legend-item"><span class="focus-legend-swatch dashed"></span>Before reprice</span>
+          </div>
+          <div class="cs-chart-caption" id="focusCaption"></div>
+        </div>
+      </div>
+
+      <div class="mv-footnote">
+        <strong>Note.</strong> Current = latest scrape. Before = prior price at reprice. Sold-out tour times omitted.
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* ============================================================
+   TRENDS & PATTERNS — controller
+   ============================================================ */
+if (sessionStorage.getItem('ps_auth') !== '1') location.replace('auth.html');
+
+document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-US',
+  {weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+/* ── State ─────────────────────────────────────────────────── */
+const STATE = {
+  meta: null,
+  changes: [],            // raw price_changes.json
+  latest: {},             // per-venue latest prices
+  history: null,          // prices_history.json (kept for meta, not charted)
+  allTravelDates: [],     // sorted list of ALL forward dates
+  movedDates: [],         // sorted list of dates where changes occurred
+  byDate: {},             // date → array of change records (all venues)
+  venuesMoved: new Set(), // which venues had any movement
+  // Filter state
+  chartVenues: { esb: true, edge: true, summit: true, totr: true },
+  focusMode: 'date',      // 'date' | 'week'
+  focusKey: '2026-04-23', // YYYY-MM-DD (single date)  OR  YYYY-MM-DD (Monday of week)
+  minByVd: null,          // memoized {vk → {date → minCents}}
+  focusChart: null,
+};
+
+const VENUE_LABELS = {
+  esb: 'ESB', edge: 'Edge', summit: 'Summit', totr: 'Top of the Rock'
+};
+const VENUE_FULLNAMES = {
+  esb: 'Empire State Building',
+  edge: 'Edge Hudson Yards',
+  summit: 'Summit One Vanderbilt',
+  totr: 'Top of the Rock'
+};
+
+/* ── Utilities ─────────────────────────────────────────────── */
+const fmtMoney = c => '$' + (c/100).toFixed(0);
+const fmtDelta = c => (c >= 0 ? '+$' : '-$') + Math.abs(c/100).toFixed(0);
+function parseTime(t) {
+  const m = /(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(t||'');
+  if (!m) return null;
+  let h = parseInt(m[1],10), mi = parseInt(m[2],10), ap = m[3].toUpperCase();
+  if (ap==='PM' && h!==12) h += 12;
+  if (ap==='AM' && h===12) h = 0;
+  return h*60 + mi;
+}
+function tourTimeHour(t) {
+  const mins = parseTime(t);
+  return mins!=null ? Math.floor(mins/60) : null;
+}
+function fmtDateLong(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+function fmtDateShort(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function fmtDateMedium(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function fmtDateTimeShort(dtRaw) {
+  if (!dtRaw) return '—';
+  const dt = new Date(String(dtRaw).replace(' ', 'T'));
+  if (Number.isNaN(dt.getTime())) return String(dtRaw);
+  return dt.toLocaleString('en-US',{
+    month:'short',
+    day:'numeric',
+    year:'numeric',
+    hour:'numeric',
+    minute:'2-digit'
+  });
+}
+function fmtDayOfWeek(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US',{weekday:'long'});
+}
+function extractIsoDate(s) {
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(String(s || ''));
+  return m ? m[1] : null;
+}
+function weekStart(d) {
+  // Monday of the ISO week containing d
+  const dt = new Date(d + 'T00:00:00Z');
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() - (day - 1));
+  return dt.toISOString().slice(0,10);
+}
+function getCssVar(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+function summarizeDetectedAt(changes) {
+  const stamps = changes.map(c => c.detected_at).filter(Boolean).sort();
+  if (!stamps.length) return 'Notice date unavailable';
+  const first = stamps[0];
+  const last = stamps[stamps.length - 1];
+  if (first === last) return `Noticed ${fmtDateTimeShort(first)}`;
+  return `Noticed ${fmtDateTimeShort(first)} to ${fmtDateTimeShort(last)}`;
+}
+
+/* ── Load ──────────────────────────────────────────────────── */
+async function init() {
+  STATE.meta = await fetch('data/meta.json',{cache:'no-store'}).then(r=>r.json());
+
+  // Price changes (primary data)
+  const rawChanges = await fetch('data/price_changes.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>[]);
+  // For price move tracking: filter out sold-out events (new_price=0/null)
+  STATE.changes = rawChanges.filter(c => c.new_price_cents > 0 && c.old_price_cents > 0);
+  // Keep raw for status changes (includes sold-out/reopened)
+  STATE.rawChanges = rawChanges;
+
+  // Latest prices — for density strip and fallback chart data
+  const vks = STATE.meta.venue_keys;
+  const resps = await Promise.all(vks.map(vk=>fetch(`data/prices_latest_${vk}.json`,{cache:'no-store'})));
+  if (resps.every(r=>r.ok)) {
+    const payloads = await Promise.all(resps.map(r=>r.json()));
+    vks.forEach((vk,i)=>STATE.latest[vk] = payloads[i]);
+  }
+
+  // Price history (scrape-date axis data)
+  STATE.history = await fetch('data/prices_history.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>null);
+
+  // Index changes by date (exclude status-only changes where price didn't move)
+  const byDate = {};
+  STATE.changes.forEach(c => {
+    STATE.venuesMoved.add(c.venue);
+    (byDate[c.travel_date] = byDate[c.travel_date] || []).push(c);
+  });
+  STATE.byDate = byDate;
+
+  // Status changes from raw (includes sold_out ↔ available with 0/null prices)
+  STATE.statusChanges = STATE.rawChanges.filter(c => c.old_status !== c.new_status);
+  STATE.statusVenueFilter = null; // null = all venues
+  STATE.movedDates = Object.keys(byDate).sort();
+
+  // All forward travel dates from latest
+  const today = new Date().toISOString().slice(0,10);
+  const allSet = new Set();
+  vks.forEach(vk => (STATE.latest[vk]||[]).forEach(r => {
+    if (r.travel_date && r.travel_date >= today) allSet.add(r.travel_date);
+  }));
+  // Also include moved dates even if older
+  STATE.movedDates.forEach(d => allSet.add(d));
+  STATE.allTravelDates = [...allSet].sort();
+
+  // Build memoized min-price-by-venue-by-travel-date table (from latest)
+  STATE.minByVd = {};
+  vks.forEach(vk => {
+    STATE.minByVd[vk] = {};
+    (STATE.latest[vk]||[]).forEach(r => {
+      if (!r.price_cents || r.status === 'sold_out') return;
+      if (!r.travel_date) return;
+      if (!STATE.minByVd[vk][r.travel_date] || r.price_cents < STATE.minByVd[vk][r.travel_date]) {
+        STATE.minByVd[vk][r.travel_date] = r.price_cents;
+      }
+    });
+  });
+
+  // Last updated
+  const lu = Object.values(STATE.meta.coverage||{}).map(c=>c.scrape_date).filter(Boolean).sort().pop();
+  if (lu) { const _d = new Date(lu + 'T12:00:00'); document.getElementById('sidebarTs').textContent = 'Last updated: ' + _d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+  // Default the focus-chart filter to all four attractions so the curve opens
+  // on the full comp set. Users can toggle individual venues off via the chips.
+  vks.forEach(vk => { STATE.chartVenues[vk] = true; });
+
+  renderPulseStrip();
+  renderKpis();
+  renderTwoModeSplit();
+  renderMoversTable();
+  renderStatusChanges();
+
+  // Default focus: use hardcoded focusKey if it's valid, otherwise pick biggest-moving date.
+  const hardcodedDefault = '2026-04-23';
+  if (STATE.allTravelDates.includes(hardcodedDefault)) {
+    STATE.focusKey = hardcodedDefault;
+  } else if (STATE.movedDates.length) {
+    STATE.focusKey = STATE.movedDates.reduce((best, d) => {
+      const bestAbs = Math.abs((STATE.byDate[best]||[]).reduce((s,c)=>s+(c.new_price_cents-c.old_price_cents),0));
+      const dAbs    = Math.abs((STATE.byDate[d]   ||[]).reduce((s,c)=>s+(c.new_price_cents-c.old_price_cents),0));
+      return dAbs > bestAbs ? d : best;
+    }, STATE.movedDates[0]);
+  } else {
+    STATE.focusKey = STATE.allTravelDates[0] || null;
+  }
+
+  // Initialize focus panel
+  initFocusControls();
+  renderFocusDetail();
+  buildFocusChart();
+}
+
+function escapeHtml(s) {
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+/* ── Render: KPIs ───────────────────────────────────────────── */
+function renderKpis() {
+  const changes = STATE.changes;
+  const total = changes.length;
+  let netCents = 0, upN = 0, downN = 0;
+  let biggest = null;
+  changes.forEach(c => {
+    const d = c.new_price_cents - c.old_price_cents;
+    netCents += d;
+    if (d>0) upN++;
+    if (d<0) downN++;
+    if (!biggest || Math.abs(d) > Math.abs(biggest.delta)) biggest = {...c, delta: d};
+  });
+  const datesMoved = STATE.movedDates.length;
+
+  document.getElementById('kpi-total').textContent = total.toLocaleString();
+  document.getElementById('kpi-total-sub').innerHTML = `${upN} up · ${downN} down`;
+
+  const netEl = document.getElementById('kpi-net');
+  netEl.textContent = fmtDelta(netCents);
+  netEl.classList.toggle('up', netCents > 0);
+  netEl.classList.toggle('down', netCents < 0);
+  document.getElementById('kpi-net-sub').innerHTML =
+    `Avg <strong>${fmtDelta(Math.round(netCents/Math.max(1,total)))}</strong> per move`;
+
+  document.getElementById('kpi-dates').textContent = datesMoved;
+  const pctMoved = STATE.allTravelDates.length
+    ? Math.round(100 * datesMoved / STATE.allTravelDates.length) : 0;
+  document.getElementById('kpi-dates-sub').innerHTML =
+    `<strong>${pctMoved}%</strong> of forward calendar`;
+
+  const bigEl = document.getElementById('kpi-big');
+  if (biggest) {
+    bigEl.textContent = fmtDelta(biggest.delta);
+    bigEl.classList.toggle('up', biggest.delta > 0);
+    bigEl.classList.toggle('down', biggest.delta < 0);
+    document.getElementById('kpi-big-sub').innerHTML =
+      `${VENUE_LABELS[biggest.venue]||biggest.venue} · ${fmtDateShort(biggest.travel_date)} · ${escapeHtml(biggest.tour_time)}`;
+  } else {
+    bigEl.textContent = '—';
+    document.getElementById('kpi-big-sub').textContent = '';
+  }
+}
+
+/* ── Render: pulse strip — per-attraction movement status ──── */
+function renderPulseStrip() {
+  const host = document.getElementById('pulseStrip');
+  if (!host) return;
+  const vks = STATE.meta.venue_keys;
+
+  // Aggregate per venue
+  const byVenue = {};
+  STATE.changes.forEach(c => {
+    const bv = byVenue[c.venue] = byVenue[c.venue] || { n: 0, net: 0, dates: new Set() };
+    bv.n++;
+    bv.net += (c.new_price_cents - c.old_price_cents);
+    bv.dates.add(c.travel_date);
+  });
+
+  host.innerHTML = vks.map(vk => {
+    const label = (STATE.meta.venues[vk]||{}).name || vk;
+    const v = byVenue[vk];
+    if (v && v.n > 0) {
+      const dir = v.net > 0 ? 'up' : v.net < 0 ? 'down' : 'flat';
+      return `
+        <div class="pulse-card ${vk} active">
+          <div class="pulse-name">${escapeHtml(label)}</div>
+          <div class="pulse-status">${v.n.toLocaleString()} move${v.n!==1?'s':''}</div>
+          <div class="pulse-sub">
+            <strong>${v.dates.size}</strong> travel date${v.dates.size!==1?'s':''}
+            · net <strong class="${dir}">${fmtDelta(v.net)}</strong>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="pulse-card ${vk} quiet">
+        <div class="pulse-name">${escapeHtml(label)}</div>
+        <div class="pulse-status held">HELD</div>
+        <div class="pulse-sub">No movement detected</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ── Render: two-mode split (full-day vs surgical) ─────────── */
+const HOT_THRESHOLD = 10;  // ≥10 tour-time moves on a single date = full-day reprice
+
+function renderTwoModeSplit() {
+  const host = document.getElementById('twoModeSplit');
+  const cap  = document.getElementById('moveCaption');
+  if (!host) return;
+
+  if (!STATE.movedDates.length) {
+    host.innerHTML = '<div class="tm-col"><div class="tm-empty">No movement detected. Requires multiple daily scrapes.</div></div>';
+    if (cap) cap.innerHTML = '<span class="em">Awaiting second daily scrape</span> to detect reprices.';
+    return;
+  }
+
+  // One aggregate row per moved date
+  const rows = STATE.movedDates.map(d => {
+    const arr = STATE.byDate[d] || [];
+    const netCents = arr.reduce((s,c) => s + (c.new_price_cents - c.old_price_cents), 0);
+    const venues = [...new Set(arr.map(c => c.venue))];
+    return { date: d, arr, n: arr.length, netCents, venues };
+  });
+
+  // Split by magnitude: full-day reprices (≥10 tour times) vs surgical (<10)
+  const hot      = rows.filter(r => r.n >= HOT_THRESHOLD)
+                       .sort((a,b) => Math.abs(b.netCents) - Math.abs(a.netCents));
+  const surgical = rows.filter(r => r.n <  HOT_THRESHOLD)
+                       .sort((a,b) => a.date.localeCompare(b.date));
+
+  const renderRow = r => {
+    const dir = r.netCents > 0 ? 'up' : r.netCents < 0 ? 'down' : 'flat';
+    const isActive = r.date === STATE.focusKey;
+    return `
+      <div class="tm-row ${isActive ? 'active' : ''}"
+           data-tmdate="${r.date}"
+           role="button" tabindex="0"
+           title="Focus on ${fmtDateLong(r.date)}">
+        <div class="tr-date">
+          <span class="tr-primary">${fmtDateShort(r.date)}</span>
+          <span class="tr-dow">${fmtDayOfWeek(r.date).slice(0,3)}</span>
+        </div>
+        <div class="tr-count">
+          <span class="tr-n">${r.n}</span>
+          <span class="tr-unit">tour time${r.n!==1?'s':''}</span>
+        </div>
+        <div class="tr-net ${dir}">${fmtDelta(r.netCents)}</div>
+      </div>
+    `;
+  };
+
+  const hotBody      = hot.length      ? hot.map(renderRow).join('')      : '<div class="tm-empty">None detected.</div>';
+  const surgicalBody = surgical.length ? surgical.map(renderRow).join('') : '<div class="tm-empty">None detected.</div>';
+
+  const hotMoves      = hot.reduce((s,r)=>s+r.n,0);
+  const surgicalMoves = surgical.reduce((s,r)=>s+r.n,0);
+
+  host.innerHTML = `
+    <div class="tm-col">
+      <div class="tm-head">
+        <span class="tm-mode">Mode 1</span>
+        <span class="tm-title">Full-day reprices</span>
+        <span class="tm-sub">${hot.length} date${hot.length!==1?'s':''} · ${hotMoves} tour-time moves</span>
+      </div>
+      <div class="tm-list">${hotBody}</div>
+    </div>
+    <div class="tm-col">
+      <div class="tm-head">
+        <span class="tm-mode">Mode 2</span>
+        <span class="tm-title">Surgical adjustments</span>
+        <span class="tm-sub">${surgical.length} date${surgical.length!==1?'s':''} · ${surgicalMoves} tour-time move${surgicalMoves!==1?'s':''}</span>
+      </div>
+      <div class="tm-list">${surgicalBody}</div>
+    </div>
+  `;
+
+  // Click / keyboard → focus the tour-time curve on that date
+  host.querySelectorAll('.tm-row[data-tmdate]').forEach(el => {
+    const jump = () => {
+      const d = el.dataset.tmdate;
+      if (STATE.focusMode !== 'date') {
+        STATE.focusMode = 'date';
+        document.querySelectorAll('.range-pill[data-fmode]')
+          .forEach(b => b.classList.toggle('active', b.dataset.fmode === 'date'));
+        document.getElementById('focusSelectLabel').textContent = 'Travel date';
+        buildFocusDropdown();
+      }
+      STATE.focusKey = d;
+      const sel = document.getElementById('focusSelect');
+      if (sel) sel.value = d;
+      renderFocusDetail();
+      buildFocusChart();
+      // Re-render this panel so the clicked row gets the active highlight
+      renderTwoModeSplit();
+      if (sel) sel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    el.addEventListener('click', jump);
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jump(); }
+    });
+  });
+
+  // Caption — terse summary + the attractions that didn't move
+  if (cap) {
+    const heldVenues = (STATE.meta.venue_keys || [])
+      .filter(vk => !STATE.venuesMoved.has(vk))
+      .map(vk => VENUE_LABELS[vk] || vk);
+    const totalDates = hot.length + surgical.length;
+    const held = heldVenues.length
+      ? ` · <span class="em">${heldVenues.join(', ')}</span> held steady`
+      : '';
+    cap.innerHTML = `<span class="em">${totalDates}</span> date${totalDates!==1?'s':''} moved · <span class="em">${STATE.changes.length}</span> tour-time reprice${STATE.changes.length!==1?'s':''}${held}`;
+  }
+}
+
+/* ── Render: top movers table ──────────────────────────────── */
+function renderMoversTable() {
+  const host = document.getElementById('moversTable');
+
+  if (!STATE.movedDates.length) {
+    host.innerHTML = '<div class="movers-empty"><div class="ce-icon">—</div>No movement detected.</div>';
+    return;
+  }
+
+  // Build per-date aggregate rows, sorted by |net $|
+  const rows = STATE.movedDates.map(d => {
+    const arr = STATE.byDate[d] || [];
+    const netCents = arr.reduce((s,c) => s + (c.new_price_cents - c.old_price_cents), 0);
+    const venues = [...new Set(arr.map(c => c.venue))];
+    const n = arr.length;
+    const avgCents = n ? Math.round(netCents / n) : 0;
+    return { date: d, arr, netCents, venues, n, avgCents };
+  }).sort((a,b) => Math.abs(b.netCents) - Math.abs(a.netCents));
+
+  const head = `
+    <div class="movers-head">
+      <div>#</div>
+      <div>Travel date</div>
+      <div>Attraction(s)</div>
+      <div>Moves</div>
+      <div>Net $</div>
+      <div>Avg / move</div>
+      <div></div>
+    </div>
+  `;
+
+  const body = rows.map((r, i) => {
+    const netDir = r.netCents > 0 ? 'up' : r.netCents < 0 ? 'down' : 'flat';
+    const avgDir = r.avgCents > 0 ? 'up' : r.avgCents < 0 ? 'down' : 'flat';
+    const detectedSummary = summarizeDetectedAt(r.arr);
+    const venueChips = r.venues.map(v =>
+      `<span class="mv-venue-chip ${v}">${escapeHtml(VENUE_LABELS[v]||v)}</span>`
+    ).join('');
+
+    // Individual changes, biggest moves first
+    const sorted = [...r.arr].sort((a,b) =>
+      Math.abs(b.new_price_cents - b.old_price_cents) - Math.abs(a.new_price_cents - a.old_price_cents)
+    );
+    const inner = sorted.map(c => {
+      const d = c.new_price_cents - c.old_price_cents;
+      const cdir = d > 0 ? 'up' : 'down';
+      return `
+        <div class="mv-change">
+          <span class="mv-change-venue ${c.venue}">${escapeHtml(VENUE_LABELS[c.venue]||c.venue)}</span>
+          <span class="mv-change-time">
+            <span class="mv-change-time-primary">${escapeHtml(c.tour_time||'—')}</span>
+            <span class="mv-change-time-meta">Noticed ${escapeHtml(fmtDateTimeShort(c.detected_at))}</span>
+          </span>
+          <span class="mv-change-prices">
+            <span class="mv-change-old">${fmtMoney(c.old_price_cents)}</span>
+            <span class="mv-change-arrow">→</span>
+            <span class="mv-change-new ${cdir}">${fmtMoney(c.new_price_cents)}</span>
+          </span>
+          <span class="mv-change-delta ${cdir}">${cdir==='up'?'▲':'▼'} ${fmtDelta(d)}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <details class="mover-row">
+        <summary class="mover-summary">
+          <div class="mover-rank">#${i+1}</div>
+          <div class="mover-date">
+            <span class="md-primary">${fmtDateShort(r.date)}</span>
+            <span class="md-sub">${fmtDayOfWeek(r.date)}</span>
+            <span class="md-meta">${escapeHtml(detectedSummary)}</span>
+          </div>
+          <div class="mover-venues">${venueChips}</div>
+          <div class="mover-moves"><strong>${r.n}</strong> tour time${r.n!==1?'s':''}</div>
+          <div class="mover-net ${netDir}">${fmtDelta(r.netCents)}</div>
+          <div class="mover-avg ${avgDir}">${fmtDelta(r.avgCents)}</div>
+          <div class="mover-chevron">▾</div>
+        </summary>
+        <div class="mover-expand">
+          <div class="mover-expand-head">
+            <span>Attraction</span>
+            <span>Tour time / noticed</span>
+            <span>Price change</span>
+            <span>Move</span>
+          </div>
+          <div class="mover-expand-list">
+            ${inner}
+          </div>
+        </div>
+      </details>
+    `;
+  }).join('');
+
+  host.innerHTML = head + body;
+}
+
+/* ── Status Changes Table ───────────────────────────────────── */
+function renderStatusChanges() {
+  const host = document.getElementById('statusTable');
+  if (!host) return;
+
+  const allChanges = STATE.statusChanges || [];
+  if (!allChanges.length) {
+    host.innerHTML = '<div class="movers-empty"><div class="ce-icon">—</div>No status changes detected.</div>';
+    return;
+  }
+
+  // Apply venue filter
+  const changes = STATE.statusVenueFilter
+    ? allChanges.filter(c => c.venue === STATE.statusVenueFilter)
+    : allChanges;
+
+  // Get venues that have status changes
+  const venuesWithChanges = [...new Set(allChanges.map(c => c.venue))];
+
+  // Venue filter buttons
+  const venueFilters = `
+    <div class="status-filters" style="display:flex;gap:0.4rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+      <button class="sf-btn ${!STATE.statusVenueFilter ? 'active' : ''}" data-venue="">All</button>
+      ${venuesWithChanges.map(vk => `
+        <button class="sf-btn ${STATE.statusVenueFilter === vk ? 'active' : ''}" data-venue="${vk}">${VENUE_LABELS[vk] || vk}</button>
+      `).join('')}
+    </div>
+  `;
+
+  // Group by type
+  const reopened = changes.filter(c => c.old_status === 'sold_out' && c.new_status === 'available');
+  const soldOut = changes.filter(c => c.old_status === 'available' && c.new_status === 'sold_out');
+
+  // Summary stats
+  const summary = `
+    <div class="status-summary">
+      ${reopened.length ? `<div class="status-stat reopened"><span class="ss-icon">↑</span><span class="ss-count">${reopened.length}</span> reopened</div>` : ''}
+      ${soldOut.length ? `<div class="status-stat soldout"><span class="ss-icon">↓</span><span class="ss-count">${soldOut.length}</span> sold out</div>` : ''}
+      ${!changes.length ? `<div style="font-size:0.75rem;color:var(--text-dim);">No changes for this attraction</div>` : ''}
+    </div>
+  `;
+
+  // Combine and sort by date
+  const all = [
+    ...reopened.map(c => ({ ...c, type: 'reopened' })),
+    ...soldOut.map(c => ({ ...c, type: 'soldout' }))
+  ].sort((a, b) => a.travel_date.localeCompare(b.travel_date) || a.tour_time.localeCompare(b.tour_time));
+
+  // Render items - initially show 20, expandable
+  const renderItems = (list) => list.map(c => `
+    <div class="status-item ${c.type}">
+      <span class="si-indicator"></span>
+      <span class="si-venue">${escapeHtml(VENUE_LABELS[c.venue] || c.venue)}</span>
+      <span class="si-date">${fmtDateShort(c.travel_date)}</span>
+      <span class="si-time">${escapeHtml(c.tour_time)}</span>
+      <span class="si-price">${fmtMoney(c.new_price_cents)}</span>
+    </div>
+  `).join('');
+
+  const initialItems = renderItems(all.slice(0, 20));
+  const hiddenItems = all.length > 20 ? renderItems(all.slice(20)) : '';
+  const moreBtn = all.length > 20 ? `<button id="statusShowMore" style="padding:0.5rem 0;font-size:0.72rem;color:var(--gold);background:none;border:none;cursor:pointer;font-weight:600;">+${all.length - 20} more</button>` : '';
+
+  host.innerHTML = `${venueFilters}${summary}<div class="status-list">${initialItems}</div><div id="statusHidden" style="display:none;" class="status-list">${hiddenItems}</div>${moreBtn}`;
+
+  // Venue filter handlers
+  host.querySelectorAll('.sf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      STATE.statusVenueFilter = btn.dataset.venue || null;
+      renderStatusChanges();
+    });
+  });
+
+  // Toggle handler for +more
+  const moreEl = document.getElementById('statusShowMore');
+  if (moreEl) {
+    moreEl.addEventListener('click', () => {
+      const hidden = document.getElementById('statusHidden');
+      if (hidden.style.display === 'none') {
+        hidden.style.display = '';
+        moreEl.textContent = 'Show less';
+      } else {
+        hidden.style.display = 'none';
+        moreEl.textContent = `+${all.length - 20} more`;
+      }
+    });
+  }
+}
+
+/* ── Context charts (Forward curve + DOW) ──────────────────── */
+function getVenueColors() {
+  return {
+    esb:    getCssVar('--esb',    '#c9a84c'),
+    edge:   getCssVar('--edge',   '#78b8d8'),
+    summit: getCssVar('--summit', '#b89fd0'),
+    totr:   getCssVar('--totr',   '#5cbd96'),
+  };
+}
+function getChartTheme() {
+  return {
+    axisStrong: getCssVar('--text-secondary', '#8a8275'),
+    axisSoft:   getCssVar('--text-dim',       '#4e4840'),
+    grid:       getCssVar('--border-subtle',  'rgba(255,255,255,0.05)'),
+    border:     getCssVar('--border',         'rgba(255,255,255,0.07)'),
+    tooltipBg:  getCssVar('--bg-elevated',    '#201c14'),
+    tooltipBorder: getCssVar('--gold-border', 'rgba(201,168,76,0.2)'),
+    tooltipTitle:  getCssVar('--text-primary','#f2ede5'),
+    tooltipBody:   getCssVar('--text-secondary','#8a8275'),
+  };
+}
+
+/* ── Focus panel controls ──────────────────────────────────── */
+function initFocusControls() {
+  const vks = STATE.meta.venue_keys;
+
+  // Venue chips — filter which lines the focus chart draws. Default active state
+  // mirrors STATE.chartVenues so the chart opens on just the moved attraction(s).
+  const focusHost = document.getElementById('focusVenueChips');
+  focusHost.innerHTML = vks.map(vk => `
+    <button class="venue-chip${STATE.chartVenues[vk] ? ' active' : ''}" data-venue="${vk}" type="button">
+      <span class="dot ${vk}"></span>${(STATE.meta.venues[vk]||{}).name || vk}
+    </button>
+  `).join('');
+  focusHost.querySelectorAll('.venue-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const vk = btn.dataset.venue;
+      const activeCount = Object.values(STATE.chartVenues).filter(Boolean).length;
+      if (STATE.chartVenues[vk] && activeCount <= 1) return;
+      STATE.chartVenues[vk] = !STATE.chartVenues[vk];
+      btn.classList.toggle('active', STATE.chartVenues[vk]);
+      renderFocusDetail();
+      buildFocusChart();
+    });
+  });
+
+  // Populate dropdown for the current mode
+  buildFocusDropdown();
+
+  // Mode pills
+  document.querySelectorAll('.range-pill[data-fmode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (STATE.focusMode === btn.dataset.fmode) return;
+      document.querySelectorAll('.range-pill[data-fmode]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      STATE.focusMode = btn.dataset.fmode;
+      document.getElementById('focusSelectLabel').textContent =
+        STATE.focusMode === 'week' ? 'Travel week' : 'Travel date';
+      // Translate the current focus key between modes so the user stays oriented.
+      if (STATE.focusMode === 'week' && STATE.focusKey) {
+        STATE.focusKey = weekStart(STATE.focusKey);
+      }
+      buildFocusDropdown();
+      renderFocusDetail();
+      buildFocusChart();
+    });
+  });
+
+  // Dropdown change
+  document.getElementById('focusSelect').addEventListener('change', e => {
+    STATE.focusKey = e.target.value;
+    renderFocusDetail();
+    buildFocusChart();
+  });
+}
+
+/* Build the options for the focus dropdown — grouped to put movers first. */
+function buildFocusDropdown() {
+  const sel = document.getElementById('focusSelect');
+  const dates = STATE.allTravelDates;
+
+  if (STATE.focusMode === 'date') {
+    // Movers first (sorted by repriced-tour-time count desc), then remaining dates grouped by month.
+    const movers = [...STATE.movedDates].sort((a,b) => {
+      const aCount = (STATE.byDate[a] || []).length;
+      const bCount = (STATE.byDate[b] || []).length;
+      return bCount - aCount;
+    });
+    const moverSet = new Set(movers);
+
+    let html = '';
+    if (movers.length) {
+      html += '<optgroup label="★ Dates where prices moved">';
+      movers.forEach(d => {
+        const n = STATE.byDate[d]?.length || 0;
+        html += `<option value="${d}">${fmtDateLong(d)} · ${n} repriced tour time${n!==1?'s':''}</option>`;
+      });
+      html += '</optgroup>';
+    }
+    const byMonth = {};
+    dates.filter(d => !moverSet.has(d)).forEach(d => {
+      const ym = d.slice(0,7);
+      (byMonth[ym] = byMonth[ym] || []).push(d);
+    });
+    Object.keys(byMonth).sort().forEach(ym => {
+      const mLabel = new Date(ym+'-01T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      html += `<optgroup label="${mLabel}">`;
+      byMonth[ym].forEach(d => {
+        html += `<option value="${d}">${fmtDateShort(d)} · ${fmtDayOfWeek(d).slice(0,3)}</option>`;
+      });
+      html += '</optgroup>';
+    });
+    sel.innerHTML = html;
+
+    if (STATE.focusKey && dates.includes(STATE.focusKey)) {
+      sel.value = STATE.focusKey;
+    } else if (movers.length) {
+      STATE.focusKey = movers[0];
+      sel.value = movers[0];
+    } else if (dates.length) {
+      STATE.focusKey = dates[0];
+      sel.value = dates[0];
+    }
+  } else {
+    // Week mode — one option per ISO week, movers-first.
+    const weekSet = new Map();  // ws → array of dates
+    dates.forEach(d => {
+      const ws = weekStart(d);
+      if (!weekSet.has(ws)) weekSet.set(ws, []);
+      weekSet.get(ws).push(d);
+    });
+    const weeks = [...weekSet.keys()].sort();
+    const moverWeekSet = new Set(STATE.movedDates.map(d => weekStart(d)));
+
+    // Sort mover weeks by repriced-tour-time count.
+    const moverWeeks = [...moverWeekSet].sort((a,b) => {
+      const aCount = STATE.changes
+        .filter(c => weekStart(c.travel_date) === a)
+        .length;
+      const bCount = STATE.changes
+        .filter(c => weekStart(c.travel_date) === b)
+        .length;
+      return bCount - aCount;
+    });
+
+    let html = '';
+    if (moverWeeks.length) {
+      html += '<optgroup label="★ Weeks where prices moved">';
+      moverWeeks.forEach(ws => {
+        const we = new Date(new Date(ws+'T00:00:00Z').getTime() + 6*86400000).toISOString().slice(0,10);
+        const movedDays = STATE.movedDates.filter(d => weekStart(d) === ws).length;
+        const moveCount = STATE.changes
+          .filter(c => weekStart(c.travel_date) === ws)
+          .length;
+        html += `<option value="${ws}">Week of ${fmtDateShort(ws)} – ${fmtDateShort(we)} · ${movedDays} day${movedDays!==1?'s':''} · ${moveCount} repriced tour time${moveCount!==1?'s':''}</option>`;
+      });
+      html += '</optgroup>';
+    }
+    // Remaining weeks grouped by month of their Monday
+    const remainWeeks = weeks.filter(ws => !moverWeekSet.has(ws));
+    const weeksByMonth = {};
+    remainWeeks.forEach(ws => {
+      const ym = ws.slice(0,7);
+      (weeksByMonth[ym] = weeksByMonth[ym] || []).push(ws);
+    });
+    Object.keys(weeksByMonth).sort().forEach(ym => {
+      const mLabel = new Date(ym+'-01T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      html += `<optgroup label="${mLabel}">`;
+      weeksByMonth[ym].forEach(ws => {
+        const we = new Date(new Date(ws+'T00:00:00Z').getTime() + 6*86400000).toISOString().slice(0,10);
+        html += `<option value="${ws}">Week of ${fmtDateShort(ws)} – ${fmtDateShort(we)}</option>`;
+      });
+      html += '</optgroup>';
+    });
+    sel.innerHTML = html;
+
+    // Choose initial week
+    if (STATE.focusKey && weeks.includes(STATE.focusKey)) {
+      sel.value = STATE.focusKey;
+    } else if (moverWeeks.length) {
+      STATE.focusKey = moverWeeks[0];
+      sel.value = moverWeeks[0];
+    } else if (weeks.length) {
+      STATE.focusKey = weeks[0];
+      sel.value = weeks[0];
+    }
+  }
+}
+
+/* Resolve the currently-selected focusKey to the list of travel dates it covers. */
+function focusDateList() {
+  if (!STATE.focusKey) return [];
+  if (STATE.focusMode === 'week') {
+    return STATE.allTravelDates.filter(d => weekStart(d) === STATE.focusKey);
+  }
+  return [STATE.focusKey];
+}
+
+/* ── Render: focus venue detail strip ──────────────────────── */
+function renderFocusDetail() {
+  const host = document.getElementById('focusDetail');
+  if (!host) return;
+  const vks  = STATE.meta.venue_keys;
+  const dateList = focusDateList();
+
+  if (!dateList.length) { host.innerHTML = ''; return; }
+
+  const cards = vks.map(vk => {
+    const active = STATE.chartVenues[vk];
+
+    // Actual lowest GA price on the focus date(s) — memoized in STATE.minByVd.
+    // In week mode, take the min across the 7 days. This is the real "current price"
+    // the guest sees, not a count of reprices.
+    let lowCents = null;
+    dateList.forEach(d => {
+      const v = STATE.minByVd[vk]?.[d];
+      if (v && (lowCents === null || v < lowCents)) lowCents = v;
+    });
+    const priceBlock = lowCents
+      ? `<div class="focus-venue-price">$${Math.round(lowCents/100)}</div>`
+      : `<div class="focus-venue-price na">—</div>`;
+
+    // Reprice count over the focus window — drives the delta line only.
+    const n = STATE.changes.filter(c =>
+      c.venue === vk && dateList.includes(c.travel_date)).length;
+    const deltaBlock = n
+      ? `<div class="focus-venue-delta up">${n} tour time${n!==1?'s':''} repriced</div>`
+      : `<div class="focus-venue-delta flat">held steady</div>`;
+    const subBlock = `<div class="focus-venue-sub">Lowest GA on this date</div>`;
+
+    return `
+      <div class="focus-venue ${vk}${active ? '' : ' dim'}">
+        <div class="focus-venue-name"><span class="fv-dot"></span>${VENUE_LABELS[vk]||vk}</div>
+        ${priceBlock}
+        ${deltaBlock}
+        ${subBlock}
+      </div>
+    `;
+  }).join('');
+
+  host.innerHTML = cards;
+}
+
+/* ── Build: focus tour-time price curve ────────────────────── */
+function buildFocusChart() {
+  const vks = STATE.meta.venue_keys;
+  const activeVks = vks.filter(vk => STATE.chartVenues[vk]);
+  const colors = getVenueColors();
+  const theme  = getChartTheme();
+  const cap    = document.getElementById('focusCaption');
+  const chartWrap = document.getElementById('focusChartWrap');
+  const chartInner = document.getElementById('focusChartInner');
+  const canvasEl = document.getElementById('focusChart');
+  const dateList = focusDateList();
+
+  if (!dateList.length) {
+    cap.innerHTML = '<span class="em">No date selected.</span>';
+    if (STATE.focusChart) { STATE.focusChart.destroy(); STATE.focusChart = null; }
+    return;
+  }
+
+  // Assemble master X axis using ESB's 15-min intervals as the grid.
+  // Other venues snap to nearest ESB time slot.
+  const isWeek = STATE.focusMode === 'week';
+
+  // Build ESB time slots first (the grid)
+  const esbKeySet = new Set();
+  (STATE.latest['esb'] || []).forEach(r => {
+    if (!dateList.includes(r.travel_date)) return;
+    if (r.raw_status !== 'available' || !r.price_cents) return;
+    if (r.tour_time) esbKeySet.add(r.travel_date + '|' + r.tour_time);
+  });
+
+  // If ESB has no data, fall back to all venues
+  const keySet = esbKeySet.size > 0 ? esbKeySet : new Set();
+  if (esbKeySet.size === 0) {
+    activeVks.forEach(vk => {
+      (STATE.latest[vk] || []).forEach(r => {
+        if (!dateList.includes(r.travel_date)) return;
+        if (r.raw_status !== 'available' || !r.price_cents) return;
+        if (r.tour_time) keySet.add(r.travel_date + '|' + r.tour_time);
+      });
+    });
+  }
+
+  const keys = [...keySet].sort((a,b) => {
+    const [da, ta] = a.split('|');
+    const [db, tb] = b.split('|');
+    if (da !== db) return da < db ? -1 : 1;
+    const ma = parseTime(ta), mb = parseTime(tb);
+    if (ma == null && mb == null) return ta.localeCompare(tb);
+    if (ma == null) return 1;
+    if (mb == null) return -1;
+    if (ma !== mb) return ma - mb;
+    return ta.localeCompare(tb);
+  });
+
+  // Build a map of ESB grid times (in minutes) per date for snapping
+  const gridByDate = {};
+  keys.forEach(k => {
+    const [d, tt] = k.split('|');
+    const mins = parseTime(tt);
+    if (mins != null) {
+      (gridByDate[d] = gridByDate[d] || []).push({ key: k, mins, tt });
+    }
+  });
+  Object.values(gridByDate).forEach(arr => arr.sort((a,b) => a.mins - b.mins));
+
+  if (!keys.length) {
+    cap.innerHTML = `<span class="em">No tour times for this ${isWeek?'week':'date'}.</span>`;
+    if (STATE.focusChart) { STATE.focusChart.destroy(); STATE.focusChart = null; }
+    return;
+  }
+
+  // Size the INNER wrapper, not the canvas — Chart.js's responsive mode
+  // then reads inner.clientWidth/clientHeight and handles devicePixelRatio
+  // scaling internally. Sizing the canvas directly skipped Chart.js's
+  // retina-scale pass and produced a blurry smear on HiDPI displays.
+  //
+  // Both modes fit the viewport width — the whole point of week mode is to
+  // see all 7 days at a glance. Earlier versions forced the canvas to
+  // `keys.length * 14` px, which produced an 8000+ px wide chart that only
+  // showed Mon + Tue before the viewport ran out. Chart.js autoSkip handles
+  // the 600-point density fine at viewport width.
+  if (chartInner) chartInner.style.width = '';
+  if (canvasEl) {
+    canvasEl.removeAttribute('width');
+    canvasEl.removeAttribute('height');
+    canvasEl.style.width = '';
+    canvasEl.style.height = '';
+    canvasEl.style.minWidth = '';
+  }
+
+  // Labels: single date mode = raw tour_time ("10:00 AM"), week mode = short
+  // weekday + time ("Mon 10:00 AM"), with a visible day marker on the first
+  // tour time of each new day so the eye can segment the week at a glance.
+  const dayShort = d => new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{ weekday:'short', timeZone:'UTC' });
+  let lastDate = null;
+  const xLabels = keys.map(k => {
+    const [d, tt] = k.split('|');
+    if (!isWeek) return tt;
+    const isNewDay = d !== lastDate;
+    lastDate = d;
+    return isNewDay ? `${dayShort(d)} · ${tt}` : tt;
+  });
+  const keyDates = keys.map(k => k.split('|')[0]);
+  const segmentBorderColor = (color) => (ctx) => {
+    if (!isWeek) return color;
+    return keyDates[ctx.p0DataIndex] !== keyDates[ctx.p1DataIndex]
+      ? 'rgba(0,0,0,0)'
+      : color;
+  };
+  const segmentBorderWidth = (width) => (ctx) => {
+    if (!isWeek) return width;
+    return keyDates[ctx.p0DataIndex] !== keyDates[ctx.p1DataIndex]
+      ? 0
+      : width;
+  };
+
+  // Current-price series per venue — snap to nearest ESB grid time for non-ESB venues.
+  function currentSeries(vk) {
+    const lookup = {};
+    (STATE.latest[vk] || []).forEach(r => {
+      if (!dateList.includes(r.travel_date)) return;
+      if (r.raw_status !== 'available' || !r.price_cents) return;
+      lookup[r.travel_date + '|' + r.tour_time] = r.price_cents;
+    });
+
+    // For non-ESB venues, build a by-date lookup for snapping
+    const byDateMins = {};
+    if (vk !== 'esb') {
+      (STATE.latest[vk] || []).forEach(r => {
+        if (!dateList.includes(r.travel_date)) return;
+        if (r.raw_status !== 'available' || !r.price_cents) return;
+        const mins = parseTime(r.tour_time);
+        if (mins != null) {
+          (byDateMins[r.travel_date] = byDateMins[r.travel_date] || []).push({ mins, price: r.price_cents });
+        }
+      });
+      Object.values(byDateMins).forEach(arr => arr.sort((a,b) => a.mins - b.mins));
+    }
+
+    return keys.map(k => {
+      // Direct match first
+      const v = lookup[k];
+      if (v) return v / 100;
+
+      // For non-ESB, snap to nearest time within 15 mins
+      if (vk !== 'esb') {
+        const [d, tt] = k.split('|');
+        const targetMins = parseTime(tt);
+        const candidates = byDateMins[d] || [];
+        if (targetMins != null && candidates.length) {
+          let best = null, bestDist = Infinity;
+          for (const c of candidates) {
+            const dist = Math.abs(c.mins - targetMins);
+            if (dist < bestDist && dist <= 15) { bestDist = dist; best = c; }
+          }
+          if (best) return best.price / 100;
+        }
+      }
+      return null;
+    });
+  }
+
+  // Before-reprice series per venue — use old_price_cents from price_changes,
+  // but ONLY where a change was actually recorded. Never fall back to new_price_cents
+  // (a later scrape could have changed it again).
+  function beforeSeries(vk) {
+    const lookup = {};
+    STATE.changes.forEach(c => {
+      if (c.venue !== vk) return;
+      if (!dateList.includes(c.travel_date)) return;
+      lookup[c.travel_date + '|' + c.tour_time] = {
+        price_cents: c.old_price_cents,
+        detected_at: c.detected_at || null,
+      };
+    });
+    if (!Object.keys(lookup).length) return null;
+    return {
+      data: keys.map(k => {
+        const rec = lookup[k];
+        return rec && rec.price_cents ? rec.price_cents / 100 : null;
+      }),
+      scrapeDates: keys.map(k => {
+        const rec = lookup[k];
+        return extractIsoDate(rec && rec.detected_at);
+      }),
+    };
+  }
+
+  const datasets = [];
+  const movedVenues = [];
+  activeVks.forEach(vk => {
+    const venueLabel = (STATE.meta.venues[vk]||{}).name || vk;
+    const current = currentSeries(vk);
+    const beforeMeta = beforeSeries(vk);
+    const before = beforeMeta ? beforeMeta.data : null;
+    const hasCurrent = current.some(v => v != null);
+    if (!hasCurrent && !beforeMeta) return;  // venue has nothing to plot
+
+    const currentSlices = isWeek
+      ? dateList.map(d => ({
+          date: d,
+          data: current.map((v, idx) => keyDates[idx] === d ? v : null),
+        })).filter(s => s.data.some(v => v != null))
+      : [{ date: null, data: current }];
+
+    currentSlices.forEach((slice, idx) => {
+      datasets.push({
+        label: venueLabel,
+        showInLegend: idx === 0,
+        data: slice.data,
+        borderColor: colors[vk],
+        segment: {
+          borderColor: segmentBorderColor(colors[vk]),
+          borderWidth: segmentBorderWidth(2.4),
+        },
+        backgroundColor: colors[vk] + '22',
+        pointRadius: keys.length > 40 ? 0 : 2.5,
+        pointHoverRadius: 6,
+        pointBackgroundColor: colors[vk],
+        pointBorderColor: '#0a0906',
+        pointBorderWidth: 1.2,
+        borderWidth: 2.4,
+        tension: isWeek ? 0 : 0.3,
+        spanGaps: true,
+        fill: false,
+      });
+    });
+
+    if (before) {
+      movedVenues.push(vk);
+      const beforeSlices = isWeek
+        ? dateList.map(d => ({
+            date: d,
+            data: before.map((v, idx) => keyDates[idx] === d ? v : null),
+            scrapeDates: beforeMeta.scrapeDates.map((v, idx) => keyDates[idx] === d ? v : null),
+          })).filter(s => s.data.some(v => v != null))
+        : [{ date: null, data: before, scrapeDates: beforeMeta.scrapeDates }];
+
+      beforeSlices.forEach(slice => {
+        datasets.push({
+          label: venueLabel + ' · before',
+          showInLegend: false,
+          data: slice.data,
+          beforeScrapeDates: slice.scrapeDates,
+          borderColor: colors[vk],
+          segment: {
+            borderColor: segmentBorderColor(colors[vk]),
+            borderWidth: segmentBorderWidth(1.6),
+          },
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          borderWidth: 1.6,
+          borderDash: [5, 4],
+          tension: isWeek ? 0 : 0.3,
+          spanGaps: false,
+          fill: false,
+        });
+      });
+    }
+  });
+
+  if (STATE.focusChart) STATE.focusChart.destroy();
+  const ctx = canvasEl.getContext('2d');
+  STATE.focusChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: xLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
+      scales: {
+        x: {
+          type: 'category',
+          ticks: {
+            color: theme.axisStrong,
+            font: { size: 10, family: 'DM Mono, ui-monospace, monospace' },
+            maxRotation: 0, autoSkip: true, autoSkipPadding: 14,
+          },
+          grid: { color: theme.grid }, border: { color: theme.border },
+          title: {
+            display: true,
+            text: isWeek ? 'TRAVEL WEEK · MON → SUN · EACH DAY AM → PM' : 'TOUR TIME · AM → PM',
+            color: theme.axisSoft, font: { size: 10, weight: 700 }
+          }
+        },
+        y: {
+          ticks: {
+            color: theme.axisStrong, font: { size: 11 },
+            callback(v) { return '$' + v.toFixed(0); }
+          },
+          grid: { color: theme.grid }, border: { color: theme.border },
+          title: {
+            display: true, text: 'ALL-IN GA PRICE',
+            color: theme.axisSoft, font: { size: 10, weight: 700 }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: true, position: 'top', align: 'end',
+          labels: {
+            color: theme.axisStrong,
+            font: { size: 11, family: 'DM Sans, system-ui, sans-serif' },
+            boxWidth: 22, boxHeight: 2, usePointStyle: false, padding: 14,
+            filter(item, data) {
+              const ds = data.datasets[item.datasetIndex];
+              if (ds && ds.showInLegend === false) return false;
+              // Hide "· before" series from the legend — explained by the focus-legend strip
+              return !/· before$/.test(item.text);
+            }
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: theme.tooltipBg, borderColor: theme.tooltipBorder, borderWidth: 1,
+          titleColor: theme.tooltipTitle, bodyColor: theme.tooltipBody, padding: 10,
+          filter: (item) => item.raw != null,  // hide null values
+          callbacks: {
+            title(items) {
+              const idx = items[0]?.dataIndex;
+              if (idx == null) return items[0]?.label || '';
+              const [travelDate, tourTime] = keys[idx].split('|');
+              return isWeek ? `${fmtDateMedium(travelDate)} · ${tourTime}` : (tourTime || items[0]?.label || '');
+            },
+            label(item) {
+              const isBefore = / · before$/.test(item.dataset.label);
+              const name = item.dataset.label.replace(/ · before$/, '');
+              const scrapeDate = isBefore ? item.dataset.beforeScrapeDates?.[item.dataIndex] : null;
+              const beforeLabel = scrapeDate ? ` (before ${fmtDateMedium(scrapeDate)} scrape)` : ' (before scrape)';
+              return '  ' + name + (isBefore ? beforeLabel : '')
+                + ': ' + (item.raw != null ? '$' + item.raw.toFixed(2) : '—');
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Caption
+  const periodLabel = STATE.focusMode === 'week'
+    ? (() => {
+        const ws = STATE.focusKey;
+        const we = new Date(new Date(ws+'T00:00:00Z').getTime() + 6*86400000).toISOString().slice(0,10);
+        return `Week of ${fmtDateLong(ws)} – ${fmtDateShort(we)} · ${dateList.length} day${dateList.length!==1?'s':''}`;
+      })()
+    : `${fmtDateLong(STATE.focusKey)} · ${fmtDayOfWeek(STATE.focusKey)}`;
+
+  const venueCount = activeVks.length;
+  // Unique-tour-time count for the caption: in week mode keys are date|tour_time
+  // composites, but for the human summary we want the distinct tour-time count.
+  const uniqTimes = new Set(keys.map(k => k.split('|')[1])).size;
+  const tourTimeWord = isWeek
+    ? `${keys.length} data point${keys.length!==1?'s':''} across ${uniqTimes} unique tour time${uniqTimes!==1?'s':''}`
+    : `${uniqTimes} tour time${uniqTimes!==1?'s':''}`;
+  if (movedVenues.length) {
+    const venueNames = movedVenues.map(v => VENUE_LABELS[v]||v).join(', ');
+    const repriceN = STATE.changes.filter(c =>
+      movedVenues.includes(c.venue) && dateList.includes(c.travel_date)).length;
+    cap.innerHTML = `<span class="em">${periodLabel}</span> · ${venueCount} attraction${venueCount!==1?'s':''} · ${tourTimeWord} · <span class="em">${repriceN}</span> reprice${repriceN!==1?'s':''} (<span class="em">${venueNames}</span>)`;
+  } else {
+    cap.innerHTML = `<span class="em">${periodLabel}</span> · ${venueCount} attraction${venueCount!==1?'s':''} · ${tourTimeWord} · no reprices — pick a ★ date`;
+  }
+}
+
+/* ── Boot ──────────────────────────────────────────────────── */
+init().catch(e => {
+  console.error('Trends & Patterns init failed:', e);
+  const host = document.getElementById('moversTable');
+  if (host) host.innerHTML = '<div class="movers-empty"><div class="ce-icon">—</div>Data load failed. See console.</div>';
+});
+
+/* ── Theme toggle ──────────────────────────────────────────── */
+(function () {
+  const DARK_ICON = '<path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.7a1 1 0 11-1.41-1.41l.7-.71zM18 9a1 1 0 110 2h-1a1 1 0 110-2h1zm-1.78 5.78a1 1 0 010 1.42l-.7.7a1 1 0 11-1.42-1.41l.71-.71a1 1 0 011.41 0zM11 16a1 1 0 11-2 0v-1a1 1 0 112 0v1zm-5.78-.78a1 1 0 01-1.41 0l-.71-.7a1 1 0 011.41-1.42l.71.71a1 1 0 010 1.41zM4 10a1 1 0 110-2H3a1 1 0 110 2h1zm1.22-6.22a1 1 0 010 1.41l-.71.71A1 1 0 013.1 4.49l.7-.71a1 1 0 011.42 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/>';
+  const LIGHT_ICON = '<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>';
+  const btn = document.getElementById('themeToggle');
+  const icon = document.getElementById('themeIcon');
+  if (localStorage.getItem('ps_theme') === 'light' && icon) icon.innerHTML = LIGHT_ICON;
+  if (btn) {
+    btn.addEventListener('click', function () {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('ps_theme', 'dark');
+        if (icon) icon.innerHTML = DARK_ICON;
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('ps_theme', 'light');
+        if (icon) icon.innerHTML = LIGHT_ICON;
+      }
+      // Rebuild the focus chart with new theme
+      if (STATE.focusChart) { STATE.focusChart.destroy(); STATE.focusChart = null; }
+      buildFocusChart();
+    });
+  }
+})();
+</script>
+<script src="chat-widget.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Revenue Analyst Case Study</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-lt: #dfc278;
+  --gold-dim: rgba(201,168,76,0.18);
+  --bg: #0c0a08;
+  --bg-card: #131109;
+  --bg-elevated: #1a1610;
+  --border: rgba(255,255,255,0.07);
+  --border-gold: rgba(201,168,76,0.24);
+  --text: #f2ede5;
+  --text-2: #a89f90;
+  --text-3: #5e5648;
+  --font-d: 'Cinzel', Georgia, serif;
+  --font-b: 'DM Sans', system-ui, sans-serif;
+  --font-m: 'DM Mono', 'Courier New', monospace;
+}
+html[data-theme="light"] {
+  --gold: #8e640d;
+  --gold-lt: #a17a1f;
+  --gold-dim: rgba(142,100,13,0.18);
+  --bg: #ddd0b6;
+  --bg-card: #ebe0c5;
+  --bg-elevated: #e7dcbe;
+  --border: rgba(56,38,8,0.18);
+  --border-gold: rgba(142,100,13,0.32);
+  --text: #1c140a;
+  --text-2: #4a3b22;
+  --text-3: #7a6843;
+}
+html[data-theme="light"] body { background: linear-gradient(180deg, #d8cbac 0%, #ddd0b6 45%, #d2c3a3 100%); }
+html[data-theme="light"] tbody tr:hover { background: rgba(0,0,0,0.04); }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-b); background: var(--bg); color: var(--text); line-height: 1.7; }
+
+.page { max-width: 860px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+
+.cover { text-align: center; padding: 3rem 0 3.5rem; border-bottom: 1px solid var(--border-gold); margin-bottom: 3.5rem; position: relative; }
+.cover::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 2rem; background: linear-gradient(to bottom, transparent, var(--gold)); }
+.cover-eyebrow { font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.4rem; }
+.cover-title { font-family: var(--font-d); font-size: 2.4rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text); line-height: 1.2; margin-bottom: 0.75rem; }
+.cover-sub { font-size: 1.05rem; color: var(--text-2); font-weight: 300; margin-bottom: 2rem; letter-spacing: 0.01em; }
+.cover-meta { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+.cover-meta-item { font-size: 0.75rem; color: var(--text-3); font-family: var(--font-m); letter-spacing: 0.08em; text-transform: uppercase; }
+.cover-meta-item strong { color: var(--text-2); display: block; font-size: 0.8rem; letter-spacing: 0; font-family: var(--font-b); font-weight: 600; }
+
+.toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; }
+.toc-title { font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem; }
+.toc-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 2rem; margin: 0; padding: 0; list-style: none; counter-reset: toc; }
+.toc-list li { counter-increment: toc; }
+.toc-list li a { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.85rem; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
+.toc-list li a::before { content: counter(toc) "."; font-family: var(--font-m); font-size: 0.75rem; color: var(--gold); min-width: 1.2rem; }
+.toc-list li a:hover { color: var(--gold); }
+@media (max-width: 640px) { .toc-list { grid-template-columns: 1fr; } }
+
+.section { margin-bottom: 3rem; }
+.section-num { font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.35rem; }
+.section-title { font-family: var(--font-d); font-size: 1.35rem; font-weight: 600; letter-spacing: 0.05em; color: var(--text); margin-bottom: 0.2rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--border); }
+
+.sub { margin-bottom: 1.75rem; }
+.sub-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem; }
+p { font-size: 0.895rem; color: var(--text); margin-bottom: 0.85rem; line-height: 1.72; }
+p:last-child { margin-bottom: 0; }
+
+ul, ol { padding-left: 1.2rem; margin-bottom: 0.85rem; }
+li { font-size: 0.88rem; color: var(--text); line-height: 1.7; margin-bottom: 0.4rem; }
+li:last-child { margin-bottom: 0; }
+li strong { color: var(--gold-lt); }
+
+.callout { background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.25rem 0; }
+.callout-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.55rem; }
+.callout p { font-size: 0.86rem; color: var(--text-2); margin-bottom: 0; line-height: 1.65; }
+
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin: 1rem 0 1.25rem; background: var(--bg-card); }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: var(--bg-elevated); color: var(--gold); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.7rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border-gold); white-space: nowrap; }
+tbody td { font-size: 0.82rem; color: var(--text); padding: 0.62rem 0.85rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+td.dim { color: var(--text-2); }
+td.highlight { color: var(--gold-lt); font-weight: 600; }
+
+/* Architecture expandable rows */
+.arch-detail { width: 100%; }
+.arch-detail summary { display: flex; justify-content: space-between; align-items: center; padding: 0.62rem 0.85rem; cursor: pointer; list-style: none; }
+.arch-detail summary::-webkit-details-marker { display: none; }
+.arch-detail summary::after { content: '+'; font-size: 0.9rem; color: var(--gold); font-weight: 600; transition: transform 0.2s; }
+.arch-detail[open] summary::after { content: '-'; }
+.arch-detail .arch-name { font-size: 0.82rem; color: var(--text); }
+.arch-detail .arch-cost { font-size: 0.82rem; color: var(--text); margin-left: auto; padding-right: 1rem; }
+.arch-detail .arch-info { padding: 0 0.85rem 0.85rem 0.85rem; border-top: 1px solid var(--border); background: rgba(201,168,76,0.04); }
+.arch-detail .arch-info p { font-size: 0.78rem; color: var(--text-2); margin: 0.5rem 0 0; line-height: 1.55; }
+.arch-detail .arch-info p:first-child { margin-top: 0.75rem; }
+.arch-detail .arch-info strong { color: var(--gold); font-weight: 600; }
+
+/* Validation inputs expandable rows */
+.input-list { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg-card); }
+.input-row { border-bottom: 1px solid var(--border); }
+.input-row:last-child { border-bottom: none; }
+.input-row summary { display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 1rem; cursor: pointer; list-style: none; transition: background 0.15s; }
+.input-row summary::-webkit-details-marker { display: none; }
+.input-row summary:hover { background: rgba(201,168,76,0.04); }
+.input-row summary::after { content: '+'; font-size: 0.85rem; color: var(--gold); font-weight: 600; margin-left: 0.75rem; }
+.input-row[open] summary::after { content: '-'; }
+.input-row[open] summary { background: rgba(201,168,76,0.06); border-bottom: 1px solid var(--border); }
+.ir-data { font-size: 0.82rem; color: var(--text); flex: 1; }
+.ir-rec { font-size: 0.7rem; font-family: var(--font-m); color: var(--gold); letter-spacing: 0.05em; }
+.ir-detail { padding: 0.75rem 1rem; font-size: 0.78rem; color: var(--text-2); line-height: 1.6; background: rgba(201,168,76,0.03); }
+
+.finding { background: rgba(201,168,76,0.06); border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; padding: 0.9rem 1.1rem; margin: 1rem 0; }
+.finding p { font-size: 0.88rem; color: var(--text); margin-bottom: 0; line-height: 1.68; }
+
+.divider { display: flex; align-items: center; gap: 0.75rem; margin: 2.5rem 0 2rem; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.divider-gem { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+
+.doc-footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: center; font-size: 0.72rem; color: var(--text-3); font-family: var(--font-m); letter-spacing: 0.08em; }
+/* Adjust page for sidebar layout */
+.case-study-content {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+.case-study-content > .page {
+  max-width: 860px;
+  /* Center on full viewport (not just the post-sidebar content area) */
+  margin-left: max(2rem, calc((100vw - 860px) / 2 - var(--sidebar-w)));
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap"><span class="brand-diamond"></span></div>
+        <span class="brand-rule"></span>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <span class="sidebar-sub">Price Intelligence</span>
+      <div class="topbar-right" style="margin-top:1rem;"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+        <a href="index.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10m-10 7h16"/></svg>
+          Executive Overview
+        </a>
+        <a href="tracker.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 4h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg>
+          Price Tracker
+        </a>
+        <a href="sunset.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Sunset Analysis
+        </a>
+        <a href="trends.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <span class="status-dot live"></span>
+        <span class="status-label">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="lastUpdated">Loading...</div>
+    </div>
+  </aside>
+
+  <div class="case-study-content">
+    <div class="page">
+
+  <div class="cover">
+    <div class="cover-eyebrow">Empire State Building Observatory</div>
+    <h1 class="cover-title">Competitor Pricing Intelligence<br>Case Study</h1>
+    <p class="cover-sub">Design, methodology, analysis, and revenue recommendations</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">Submitted<strong>April 2026</strong></div>
+      <div class="cover-meta-item">Competitors<strong>Edge · Summit · Top of the Rock</strong></div>
+      <div class="cover-meta-item">Data window<strong>Apr 2026 – Jan 2027</strong></div>
+      <div class="cover-meta-item">Dashboard<strong><a href="index.html" style="color:var(--gold)">Live Tool</a></strong></div>
+    </div>
+  </div>
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol class="toc-list">
+      <li><a href="#section-1">Data Collection</a></li>
+      <li><a href="#section-2">Data Manipulation</a></li>
+      <li><a href="#section-3">AI Utilization</a></li>
+      <li><a href="#section-4">Analysis</a></li>
+      <li><a href="#section-5">Revenue Recommendations</a></li>
+      <li><a href="#section-6">Additional Considerations</a></li>
+    </ol>
+  </nav>
+
+  <!-- SECTION 1 -->
+  <div class="section" id="section-1">
+    <div class="section-num">Section 1</div>
+    <h2 class="section-title">Data Collection</h2>
+
+    <div class="sub">
+      <div class="sub-title">Volume</div>
+      <p>Each scrape captures every general-admission tour-time price across all four attraction booking pages.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Attraction</th><th>Rows</th><th>Dates</th><th>Data window</th></tr></thead>
+        <tbody>
+          <tr><td>Empire State Building</td><td>9,568</td><td>172</td><td>Apr 12 – Oct 1, 2026</td></tr>
+          <tr><td>Edge Hudson Yards</td><td>20,868</td><td>267</td><td>Apr 12, 2026 – Jan 4, 2027</td></tr>
+          <tr><td>Summit One Vanderbilt</td><td>5,371</td><td>199</td><td>Apr 12 – Oct 28, 2026</td></tr>
+          <tr><td>Top of the Rock</td><td>22,929</td><td>264</td><td>Apr 12, 2026 – Jan 1, 2027</td></tr>
+        </tbody>
+      </table></div>
+      <p>ESB's booking window extends approximately six months forward; Edge and TOR extend roughly nine months. All analysis is bounded by ESB's window, since that is the shared date range across all four attractions. <a href="tracker.html" style="color:var(--gold);font-size:0.8rem;">→ Browse in Price Tracker</a></p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Storage</div>
+      <p>For this 48-hour prototype, prices are stored in a local SQLite database, with static JSON files published to GitHub and the dashboard served as a fully static site with no server required.</p>
+      <p>The recommended production path is Azure PostgreSQL for the data layer, Blob Storage for the JSON payload, and Entra ID SSO for access control. The full architecture and cost estimate ($58–99/month) are covered in Section 6.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Frequency</div>
+      <p>Prices are collected once per day. Competitor prices move by date and tour time rather than by the hour, a daily cadence captures all meaningful changes. ESB and Edge both reprice dynamically. Between two consecutive daily scrapes, Edge repriced five tour times upward.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Method</div>
+      <p>The scraper is written in Python (a widely-used programming language) using Playwright (a browser automation library) and headless Chromium (a browser engine that runs without a visible window). For each attraction, it opens the public booking widget, steps through the forward calendar date by date, and reads every available tour time and its listed price. This is the same interaction any guest would perform manually. All data collected is publicly visible.</p>
+      <p>Each daily run scrapes all four attractions, validates that row counts are within expected ranges, rebuilds the static JSON payload, and publishes. If any attraction returns zero rows, the run is blocked and the prior day's data remains live.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Limitations</div>
+      <ul>
+        <li>Site redesigns break scrapers overnight. Validation catches failures the same morning.</li>
+        <li>A Gmail alert fires within seconds on any scrape failure.</li>
+        <li>There is no historical data before April 2026. The window grows daily.</li>
+        <li>TOR blocks automated traffic. The scraper presents a standard Chrome browser identity.</li>
+      </ul>
+      <div class="callout">
+        <div class="callout-label">On Competitor APIs</div>
+        <p>During development, AI-assisted testing revealed that several competitor booking systems expose API endpoints capable of returning real-time pricing and availability data without browser interaction. This approach was not used; querying proprietary booking infrastructure without authorization would likely violate each platform's terms of service.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="divider-gem"></div></div>
+
+  <!-- SECTION 2 -->
+  <div class="section" id="section-2">
+    <div class="section-num">Section 2</div>
+    <h2 class="section-title">Data Manipulation</h2>
+
+    <div class="sub">
+      <div class="sub-title">Scope</div>
+      <p>This analysis covers general-admission pricing only: one adult, one ticket, the lowest-priced deck entry for each attraction. Premium and upsell tier comparisons are addressed in Section 6.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Schema</div>
+      <p>The database stores one row per attraction, per tour time, per travel date, per scrape run. Key fields are attraction, scrape_date, travel_date, tour_time, price_cents (null where sold out), and tour_group (ESB only).</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Tour Time Intervals</div>
+      <p>Attractions sell at different intervals: ESB every 15 minutes, Summit every 30 minutes, Edge and TOR every 10 minutes. Cross-attraction comparisons match to nearest available tour time within ±30 minutes. <a href="tracker.html" style="color:var(--gold);font-size:0.8rem;">→ See tour times in Tracker</a></p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Fee Normalization</div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Attraction</th><th>Fee</th><th>GA base</th><th>1-ticket all-in</th><th>4-ticket all-in</th></tr></thead>
+        <tbody>
+          <tr><td>ESB</td><td>$5/order</td><td>$44</td><td class="highlight">$49</td><td>$181</td></tr>
+          <tr><td>Edge</td><td>$2/ticket</td><td>$40</td><td>$42</td><td>$168</td></tr>
+          <tr><td>Summit</td><td>$3/order</td><td>$44</td><td>$47</td><td>$179</td></tr>
+          <tr><td>TOR</td><td>Embedded</td><td>$42</td><td>$42</td><td>$168</td></tr>
+        </tbody>
+      </table></div>
+      <p>ESB carries the highest all-in price for a solo buyer ($49 vs. Edge $42). The fee structure alone drives this gap. Base prices across all four attractions are within $2–4 of each other. <a href="index.html" style="color:var(--gold);font-size:0.8rem;">→ See price matrix</a></p>
+      <div class="callout">
+        <div class="callout-label">Caveat - Fee-Inclusive Toggle</div>
+        <p>All dashboard analyses currently compare base fares before booking fees. Because fee structures differ across attractions (per-order, per-ticket, embedded), a true apples-to-apples comparison requires an all-in view that layers fees on top of every price point. The ideal implementation is a toggle on each analysis page that switches between base-fare and all-in pricing, adjustable by party size. This was scoped but not built within the 48-hour window. It is the highest-priority enhancement for the next iteration.</p>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Sunset Premium</div>
+      <p>Sunset premium = peak evening price minus same-date noon price. Noon is the baseline because every attraction sells it and no attraction prices noon as a sunset-window hour. The result is a consistent, apples-to-apples comparison across all four.</p>
+      <ul>
+        <li><strong>ESB:</strong> Peak in Sunset/Twilight tour group minus noon.</li>
+        <li><strong>Edge:</strong> Peak in sunset-tagged times minus noon. Median $16.</li>
+        <li><strong>Summit:</strong> Two bands per date. Peak minus base = $13 on 99.5% of dates.</li>
+        <li><strong>TOR:</strong> Peak in "Sunset"-labeled times minus noon.</li>
+      </ul>
+      <p style="margin-top:0.5rem;"><a href="sunset.html" style="color:var(--gold);font-size:0.8rem;">→ Full sunset analysis with per-date breakdown</a></p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Bad Data</div>
+      <p>Sold-out tour times: stored as null, not zero. Last known price carries forward. Zero-row scrapes block publish; prior day's data remains live. Anomalies are flagged in the log, not deleted. <a href="methodology.html" style="color:var(--gold);font-size:0.8rem;">→ Full methodology</a></p>
+    </div>
+  </div>
+
+  <div class="divider"><div class="divider-gem"></div></div>
+
+  <!-- SECTION 3 -->
+  <div class="section" id="section-3">
+    <div class="section-num">Section 3</div>
+    <h2 class="section-title">AI Utilization</h2>
+
+    <div class="sub">
+      <div class="sub-title">Tool</div>
+      <p>All AI-assisted work in this project used Claude Code, Anthropic's command-line coding agent powered by Claude Opus 4.6.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Built with AI</div>
+      <p>Claude Code was used to design and implement the four attraction scrapers, the SQLite database schema, the validation pipeline, all five dashboard pages, the sunset premium detection algorithm, and an embedded chatbot for plain-English data queries. <a href="index.html" style="color:var(--gold);font-size:0.8rem;">→ See the dashboard</a></p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Speed</div>
+      <p>The full system (scrapers, database, pipeline, and dashboard) was built in 48 hours. A comparable build without AI assistance would conservatively require five to six weeks with a two-person development team.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Enhancement</div>
+      <p>No engineering background. One revenue analyst directing Claude Code as a technical co-builder.</p>
+      <p>Claude Code produced the code. The analyst specified what to build and made every pricing call: which fee structure to use as the comparison basis, which baseline to anchor the sunset upsell calculation, how to distinguish a scraper failure from a low-demand day. The technical scope: four scrapers, SQLite database, validation pipeline, five dashboard pages, embedded chatbot. Built in 48 hours. Claude Code launched in February 2025 and has released major capability updates every few weeks since. </p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Limitations</div>
+      <p>Competitor APIs found during testing were not used; querying proprietary booking infrastructure would likely violate terms of service. Claude Code cannot access login-required rates or draw on real-time web data. The project required modular documentation to manage the model's context window. Each scraper was manually verified against a live browser session before production use.</p>
+    </div>
+  </div>
+
+  <div class="divider"><div class="divider-gem"></div></div>
+
+  <!-- SECTION 4 -->
+  <div class="section" id="section-4">
+    <div class="section-num">Section 4</div>
+    <h2 class="section-title">Analysis</h2>
+
+    <div class="sub">
+      <div class="sub-title">Pricing Trends</div>
+      <p>ESB and Edge reprice dynamically, with prices that change by date, tour time, and demand signals. Summit and TOR use variable fixed tiers set in advance, with no intraday repricing observed. <a href="trends.html" style="color:var(--gold);font-size:0.8rem;">→ Explore in Trends</a></p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Attraction</th><th>Range</th><th>Distinct</th><th>How it moves</th></tr></thead>
+        <tbody>
+          <tr><td>ESB</td><td>$44–$62</td><td>7</td><td>Dynamic. Capacity driven.</td></tr>
+          <tr><td>Edge</td><td>$42–$69</td><td>26</td><td>Dynamic. Live repricing observed.</td></tr>
+          <tr><td>Summit</td><td>$44–$68</td><td>6</td><td>Variable. Base + $13 sunset step.</td></tr>
+          <tr><td>TOR</td><td>$42–$71</td><td>9</td><td>Variable. $3 intervals, fixed once set.</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Live repricing (Apr 11 → Apr 12):</strong> Edge repriced 5 tour times upward ($50→$51, $65→$67, etc.). No other attraction changed.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Competitive Positioning</div>
+      <div class="finding">
+        <p><strong>ESB has the lowest price on 1,022 of 1,289 sunset tour times (79%).</strong> These are tour times where all four attractions were at sunset pricing, an apples-to-apples comparison. Each ESB Sunset/Twilight tour time matched to nearest competitor sunset-priced time within ±30 min. <a href="sunset.html" style="color:var(--gold);font-size:0.8rem;">→ Explore in Sunset Analysis</a></p>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Comparison</th><th>ESB lowest</th></tr></thead>
+        <tbody>
+          <tr><td>vs. Edge</td><td class="highlight">93%</td></tr>
+          <tr><td>vs. Summit</td><td class="highlight">84%</td></tr>
+          <tr><td>vs. TOR</td><td class="highlight">94%</td></tr>
+        </tbody>
+      </table></div>
+      <p>ESB's $62 ceiling is the lowest in the comp set. Edge peaks at $69, Summit at $68, TOR at $71. The average gap to TOR across matched sunset tour times is $5.67, with a maximum of $13. ESB is systematically underpriced during the window where competitor prices are highest.</p>
+      <p>On a solo all-in basis, ESB is the most expensive at $49 (see fee structure in <a href="#section-2" style="color:var(--gold)">Section 2</a>). This is a fixable structural issue, not a base-price problem.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Timing & Seasonality</div>
+      <p>All four attractions price by time of day. ESB is the only one that does not vary price by day of week. <a href="trends.html" style="color:var(--gold);font-size:0.8rem;">→ Explore in Trends</a></p>
+      <p>Weekend uplift: ESB +0.5% vs. Edge +5.8%, Summit +5.3%, TOR +2.3%. <em>Calculation: (avg weekend price - avg weekday price) / avg weekday price, across all tour times in the forward calendar.</em></p>
+      <p>The forward calendar covers peak summer and major holiday windows. On a July 5th Sunday, ESB's average available price ($50.16) is within $0.50 of a quiet April weekday. There is limited holiday or seasonal premium in the pricing model. Every competitor charges more on high-traffic days.</p>
+    </div>
+  </div>
+
+  <div class="divider"><div class="divider-gem"></div></div>
+
+  <!-- SECTION 5 -->
+  <div class="section" id="section-5">
+    <div class="section-num">Section 5</div>
+    <h2 class="section-title">Revenue Recommendations</h2>
+    <p>Five directional recommendations based on public competitor pricing data.</p>
+    <div class="callout">
+      <div class="callout-label">Important</div>
+      <p>These recommendations are preliminary and directional. Public pricing data shows where opportunities may exist, but finalizing any recommendation requires internal data: conversion rates, capacity utilization, channel mix, and price elasticity. The validation inputs in Section 6 list exactly what is needed to size each opportunity and set implementation thresholds.</p>
+    </div>
+
+    <!-- REC 1 -->
+    <div class="sub" style="margin-top:2rem;">
+      <div class="sub-title">Rec 1. Add a $64 Peak Sunset Tier</div>
+      <p>ESB's current sunset pricing tops out at $62 across three tiers ($56 / $58 / $62), the lowest ceiling in the comp set.</p>
+      <p><strong>Action:</strong> Add $64 for high-demand sunset dates and raise the floor from $56 to $58. New structure: $58 / $62 / $64. <strong>Capacity trigger:</strong> sell-through ≥ X% and ≥1 competitor at $64+.</p>
+
+      <div class="finding">
+        <p>ESB has the lowest price on 1,022 of 1,289 matched sunset tour times (79%), at tour times where all four attractions were at sunset pricing. By tier: $56 is lowest 96% of the time, $58 is lowest 81%, and <strong>$62 is lowest only 63%</strong>, indicating meaningful headroom at the top tier. <a href="sunset.html" style="color:var(--gold);font-size:0.8rem;">→ See full sunset comparison</a></p>
+      </div>
+
+    </div>
+
+    <!-- REC 2 -->
+    <div class="sub">
+      <div class="sub-title">Rec 2. Extend Sunset Pricing 30 Min Past Astronomical Sunset</div>
+      <p>ESB's sunset pricing currently ends at astronomical sunset, after which tickets revert to the base rate. The sky retains visible color for roughly 30 minutes after sunset, a window that TOR monetizes by holding elevated pricing more than two hours past astronomical sunset.</p>
+      <p><strong>Action:</strong> A 30-minute extension to sunset pricing adds one additional tour time per date to the premium tier.</p>
+      <p><strong>Capacity dimension:</strong> Sunset visitors tend to stay longer as the light fades, which creates throughput pressure. The extended window would require a reduction in per-tour-time capacity to prevent overcrowding: higher price per ticket, fewer tickets per tour time.</p>
+      <p><strong>Market evidence:</strong> Twilight lasts approximately 30 minutes after sunset. TOR holds elevated pricing well past that window. ESB's current structure leaves that 30-minute twilight period priced at the base rate. <a href="sunset.html" style="color:var(--gold);font-size:0.8rem;">→ See sunset timing data</a></p>
+    </div>
+
+    <!-- REC 3 -->
+    <div class="sub">
+      <div class="sub-title">Rec 3. Launch Advance-Purchase Discount</div>
+      <p>Edge offers an <a href="https://www.edgenyc.com/en/tickets" target="_blank" style="color:var(--gold)">Advance Saver discount</a> of up to 35% off for bookings made 14 or more days in advance. ESB, Summit, and TOR have no equivalent.</p>
+      <p><strong>Action:</strong> Offer 10–15% off GA for bookings made 21 or more days in advance, through the direct channel only, excluding sunset-window tour times to protect premium tier integrity.</p>
+      <p><strong>Math:</strong> At 15% off a $44 base, the discounted price would be $37.40, or $42.40 all-in with the booking fee. That floor needs to be validated against OTA net rates before launch to confirm the direct-channel discount doesn't undercut existing reseller rates.</p>
+      <p><strong>Competitive gap:</strong> Edge is the only attraction using time-of-purchase as a demand lever. A 21-day window sits comfortably outside the core booking curve for most leisure guests.</p>
+    </div>
+
+    <!-- REC 4 -->
+    <div class="sub">
+      <div class="sub-title">Rec 4. Launch ESB Membership ($400–$500)</div>
+      <p>Edge launched a <a href="https://www.edgenyc.com/annual-pass/" target="_blank" style="color:var(--gold)">$99 annual pass</a> in March 2026. It is the only attraction in the comp set with a paid membership. ESB has no equivalent.</p>
+      <p><strong>Action:</strong> A premium ESB membership at $400–$500 per year, including priority access for the member plus one guest, a 24-visit annual cap, and benefits from building tenants, would occupy a distinct tier above Edge's volume-oriented pass and leverage ESB's unique tenanted-tower footprint, which no competitor can replicate.</p>
+      <p><strong>Gate and verification:</strong> Any membership requires access control at entry: digital verification plus photo-ID check against the membership account. This prevents pass-sharing. If tenant benefits are included, a membership card or app-based credential linked to the same account would cover both observatory entry and tenant access.</p>
+      <p><strong>Differentiation:</strong> Edge's $99 pass demonstrates willingness-to-pay for recurring access. ESB is the only attraction with a tenanted tower - tenant partnerships are a structural advantage Summit, TOR, and Edge cannot replicate.</p>
+    </div>
+
+    <!-- REC 5 -->
+    <div class="sub">
+      <div class="sub-title">Rec 5. Restructure Booking Fee ($5 flat → $2/ticket)</div>
+      <p><strong>Why this matters:</strong> Per <a href="#section-2" style="color:var(--gold)">Section 2</a>, ESB's $5 flat fee makes solo tickets $49 vs. Edge's $42. OTAs charge no consumer-facing fee, so direct can appear more expensive than resellers for the same product.</p>
+      <p><strong>Action:</strong> A $2-per-ticket fee reduces the solo all-in price from $49 to $46. ESB clears Summit ($47) and closes to within $4 of Edge ($42).</p>
+
+      <p class="label">All-in prices (base + fees)</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Tickets</th><th>ESB now</th><th>ESB proposed</th><th>Edge</th><th>Summit</th><th>TOR</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>$49</td><td class="highlight">$46</td><td>$42</td><td>$47</td><td>$42</td></tr>
+          <tr><td>4</td><td>$181</td><td>$184</td><td>$168</td><td>$179</td><td>$168</td></tr>
+        </tbody>
+      </table></div>
+
+      <p><strong>The case:</strong> The fee structure (not the base price) is what makes ESB the highest-priced solo option. OTA-listed prices carry no consumer-facing fee, so the direct channel can display a higher price than resellers. A per-ticket fee closes the gap without touching the $44 base. This is the lowest-risk recommendation: a backend configuration change, testable via 30-day A/B. <a href="index.html" style="color:var(--gold);font-size:0.8rem;">→ See fee comparison in Overview</a></p>
+    </div>
+
+    </div>
+
+  <div class="divider"><div class="divider-gem"></div></div>
+
+  <!-- SECTION 6 -->
+  <div class="section" id="section-6">
+    <div class="section-num">Section 6</div>
+    <h2 class="section-title">Additional Considerations</h2>
+
+    <div class="sub">
+      <div class="sub-title">Data Required to Validate Recommendations</div>
+      <p>Internal data needed to size and finalize the Section 5 recommendations. Click any row for details.</p>
+
+      <p class="label" style="margin-top:1.25rem;">Ticketing / Sales (Accounting)</p>
+      <div class="input-list">
+        <details class="input-row">
+          <summary><span class="ir-data">Sunset capacity utilization</span><span class="ir-rec"><strong>Rec 1</strong></span></summary>
+          <div class="ir-detail">Rec 1 adds a $64 peak tier. This data sets the sell-through threshold that triggers $64 pricing. Without it, any capacity trigger is arbitrary.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Conversion by price tier</span><span class="ir-rec"><strong>Rec 1, 2</strong></span></summary>
+          <div class="ir-detail">Rec 1 raises ceiling to $64. Rec 2 extends sunset 30 min. This shows how guests convert at $56/$58/$62 today. If $62 conversion is strong, $64 has room. If it drops off, $64 risks volume loss.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Sell-through curve by tour time</span><span class="ir-rec"><strong>Rec 1, 2</strong></span></summary>
+          <div class="ir-detail">Rec 1 needs to know when to activate $64. Rec 2 needs post-sunset demand. This shows how fast each tour time fills. Fire $64 too early = lose volume. Too late = leave money on the table.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Channel mix at sunset</span><span class="ir-rec"><strong>Rec 1</strong></span></summary>
+          <div class="ir-detail">Rec 1 raises sunset to $64. If sunset is heavily OTA, rate parity limits how high ESB can go on direct. High direct mix = more pricing freedom.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Post-sunset volume</span><span class="ir-rec"><strong>Rec 2</strong></span></summary>
+          <div class="ir-detail">Rec 2 extends sunset pricing 30 min past astronomical sunset. This sizes the opportunity: how many tickets currently sell in that 30-min window at base rate?</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Direct booking curve</span><span class="ir-rec"><strong>Rec 3</strong></span></summary>
+          <div class="ir-detail">Rec 3 offers 10-15% off for 21+ day advance bookings. This validates the threshold. If most direct guests already book 14+ days out, the discount just gives away margin on existing behavior.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Upsell conversion rate by product and channel</span><span class="ir-rec"><strong>Rec 3</strong></span></summary>
+          <div class="ir-detail">Rec 3 discounts advance bookings 10-15%. This shows whether early bookers also buy 102nd or Express. If yes, the discount is a funnel to upsells. If no, it's pure margin loss.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Party-size by channel</span><span class="ir-rec"><strong>Rec 5</strong></span></summary>
+          <div class="ir-detail">Rec 5 changes $5/order to $2/ticket. Solo buyers win ($49 to $46), groups of 4 pay more ($181 to $184). This shows the party-size mix to calculate net revenue impact.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Average order value by channel</span><span class="ir-rec"><strong>Rec 5</strong></span></summary>
+          <div class="ir-detail">Rec 5 restructures fees to win solo buyers. If direct AOV is higher than OTA, protecting direct volume matters more. Fee change impact depends on who you're keeping vs. losing.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Current fee revenue</span><span class="ir-rec"><strong>Rec 5</strong></span></summary>
+          <div class="ir-detail">Rec 5 changes $5/order to $2/ticket. This sets the baseline: current annual fee revenue. The new structure must beat this or justify the gap with conversion gains.</div>
+        </details>
+      </div>
+
+      <p class="label" style="margin-top:1.25rem;">Operations</p>
+      <div class="input-list">
+        <details class="input-row">
+          <summary><span class="ir-data">Sunset dwell time</span><span class="ir-rec"><strong>Rec 1, 2</strong></span></summary>
+          <div class="ir-detail">Rec 1 raises price to $64. Rec 2 extends sunset 30 min. Both increase sunset demand. Dwell time sets the capacity ceiling: longer stays = fewer tickets per hour, regardless of price.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Current capacity configuration</span><span class="ir-rec"><strong>Rec 2</strong></span></summary>
+          <div class="ir-detail">Rec 2 extends sunset pricing 30 min. This window sees higher dwell as guests watch the light fade. May need to reduce per-tour-time capacity to prevent overcrowding during golden hour.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">NYC-local repeat visits</span><span class="ir-rec"><strong>Rec 4</strong></span></summary>
+          <div class="ir-detail">Rec 4 launches $400-$500 ESB membership. This sizes the market: how many guests are NYC-area residents who visit more than once per year? That's the addressable base.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Ambassador database</span><span class="ir-rec"><strong>Rec 4</strong></span></summary>
+          <div class="ir-detail">Rec 4 launches ESB membership. Existing engaged locals (social ambassadors, past event attendees) are the seed audience for launch marketing. No cold acquisition needed for first cohort.</div>
+        </details>
+      </div>
+
+      <p class="label" style="margin-top:1.25rem;">Partners / External</p>
+      <div class="input-list">
+        <details class="input-row">
+          <summary><span class="ir-data">OTA net rate / commission</span><span class="ir-rec"><strong>Rec 3</strong></span></summary>
+          <div class="ir-detail">Rec 3 offers 10-15% off for advance direct bookings. The discount floor ($37.40 base, $42.40 all-in) must stay above OTA net rate or direct undercuts resellers, breaking rate parity.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Tenant pass utilization</span><span class="ir-rec"><strong>Rec 4</strong></span></summary>
+          <div class="ir-detail">Rec 4 includes tenant benefits in ESB membership. This validates whether tenants actually use observatory access today. Low utilization = tenant perks may not drive membership value.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">102nd floor upgrade rate + retail spend</span><span class="ir-rec"><strong>Rec 4</strong></span></summary>
+          <div class="ir-detail">Rec 4 sets membership at $400-$500/yr with 24-visit cap. Per-visit economics depend on ancillary spend. If members upgrade to 102nd and buy retail, the math works at fewer visits.</div>
+        </details>
+        <details class="input-row">
+          <summary><span class="ir-data">Edge pass sell-through</span><span class="ir-rec"><strong>Rec 3, 4</strong></span></summary>
+          <div class="ir-detail">Rec 3 and Rec 4 both reference Edge's $99 annual pass. How many passes has Edge sold? This benchmarks willingness-to-pay for recurring NYC observation deck access.</div>
+        </details>
+      </div>
+
+      <p class="label" style="margin-top:1.25rem;">Legal</p>
+      <div class="input-list">
+        <details class="input-row">
+          <summary><span class="ir-data">Fee structure change review</span><span class="ir-rec"><strong>Rec 5</strong></span></summary>
+          <div class="ir-detail">Rec 5 changes $5/order to $2/ticket. Legal must sign off. May require updated terms, checkout flow changes, OTA notification, and state/city compliance review.</div>
+        </details>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">External Feeds (Free/Low-Cost)</div>
+      <ul>
+        <li><strong>Reseller pricing:</strong> Viator, GetYourGuide. Same scrape method as the current tool, approximately one month to build and integrate.</li>
+        <li><strong>Weather:</strong> NWS API. Forecast bad-weather days are discount opportunities to recover otherwise-lost volume.</li>
+        <li><strong>FX:</strong> ECB/Fed exchange rates. A weak EUR or GBP signals price-sensitive international visitors who may respond to targeted positioning.</li>
+        <li><strong>Events:</strong> A nearby concert or convention lifts same-day demand. Advance knowledge of these allows short-window pricing adjustments.</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Tie to Inventory</div>
+      <p><strong>Yield trigger rule:</strong> When ESB utilization exceeds 80% on a tour time AND ESB price is below the lowest competitor, raise price. The Price Shop provides the demand signal (competitor rates). The ticketing system provides the supply signal (remaining capacity). <a href="tracker.html" style="color:var(--gold);font-size:0.8rem;">→ See live competitor rates</a></p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Production Architecture</div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Component</th><th>Cost/mo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td colspan="2" style="padding:0;">
+              <details class="arch-detail">
+                <summary><span class="arch-name">Container Apps Jobs (4 scrapers)</span><span class="arch-cost">$5–$15</span></summary>
+                <div class="arch-info">
+                  <p><strong>What:</strong> Serverless containers that run on a schedule (daily at 6 AM ET).</p>
+                  <p><strong>Does:</strong> Each scraper (ESB, Edge, Summit, TOR) runs as its own container job. Playwright + Chromium bundled in Docker image. Scale-to-zero when idle.</p>
+                  <p><strong>Why:</strong> No VM to manage. Adding a new competitor = add a container, not a person. Horizontally scalable and cost-efficient.</p>
+                </div>
+              </details>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:0;">
+              <details class="arch-detail">
+                <summary><span class="arch-name">PostgreSQL Flexible</span><span class="arch-cost">$35–$55</span></summary>
+                <div class="arch-info">
+                  <p><strong>What:</strong> Azure Database for PostgreSQL - a fully managed relational database.</p>
+                  <p><strong>Does:</strong> Replaces SQLite. Full ACID compliance, row-level locking, connection pooling via PgBouncer. Append-only price history for unlimited lookback.</p>
+                  <p><strong>Why:</strong> No file-lock contention. Automated backups, point-in-time restore, geo-redundancy option. Connection string in Key Vault, not code.</p>
+                </div>
+              </details>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:0;">
+              <details class="arch-detail">
+                <summary><span class="arch-name">Blob + CDN</span><span class="arch-cost">$4–$10</span></summary>
+                <div class="arch-info">
+                  <p><strong>What:</strong> Azure Blob Storage (hot tier) with Azure CDN for global delivery.</p>
+                  <p><strong>Does:</strong> Stores the static JSON payload. Each daily build is a dated snapshot. CDN caches at edge locations for fast page loads worldwide.</p>
+                  <p><strong>Why:</strong> Versioned blobs enable instant rollback. Lifecycle policy moves old data to cool/archive after 90 days. Sub-100ms delivery globally.</p>
+                </div>
+              </details>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:0;">
+              <details class="arch-detail">
+                <summary><span class="arch-name">Static Web Apps + SSO</span><span class="arch-cost">$9</span></summary>
+                <div class="arch-info">
+                  <p><strong>What:</strong> Azure Static Web Apps with built-in Entra ID (Azure AD) authentication.</p>
+                  <p><strong>Does:</strong> Hosts the dashboard HTML/JS. Auto-deploys on GitHub push. SSO via existing corporate identity - no shared passwords.</p>
+                  <p><strong>Why:</strong> IT provisions access via existing Entra ID tenant. Role-based access control. Audit log of who accessed what, when. Managed TLS certs.</p>
+                </div>
+              </details>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:0;">
+              <details class="arch-detail">
+                <summary><span class="arch-name">Key Vault + Monitor</span><span class="arch-cost">$5–$10</span></summary>
+                <div class="arch-info">
+                  <p><strong>What:</strong> Azure Key Vault for secrets management + Azure Monitor for observability.</p>
+                  <p><strong>Does:</strong> Key Vault stores DB credentials, API tokens. Monitor tracks scraper health, row counts, errors. Alert rules fire to Teams/email on failure.</p>
+                  <p><strong>Why:</strong> No secrets in environment variables or code. Managed Identity auth - containers authenticate to Key Vault without stored credentials. Full audit trail.</p>
+                </div>
+              </details>
+            </td>
+          </tr>
+          <tr><td class="highlight">Total</td><td class="highlight">$58–$99</td></tr>
+        </tbody>
+      </table></div>
+      <p>All components are Azure-native and fit within a standard enterprise Azure tenant. Entra ID SSO replaces the current password gate, and the full stack runs under $100 per month. <a href="guide.html" style="color:var(--gold);font-size:0.8rem;">→ Full site guide</a></p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    ESBO Revenue Analyst Case Study · April 2026 · <a href="index.html">Return to Dashboard</a>
+  </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Date and meta
+fetch('data/meta.json').then(r => r.ok ? r.json() : Promise.reject()).then(m => {
+  const d = m.built_at ? new Date(m.built_at) : null;
+  document.getElementById('lastUpdated').textContent = d ? 'Last updated: ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Last updated: —';
+}).catch(() => { document.getElementById('lastUpdated').textContent = 'Last updated: —'; });
+</script>
+<script src="theme-toggle.js" defer></script>
+</body>
+</html>

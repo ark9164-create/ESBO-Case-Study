@@ -1,0 +1,4 @@
+{
+  "chat_enabled": true,
+  "chat_model": "google/gemini-3-flash-preview"
+}

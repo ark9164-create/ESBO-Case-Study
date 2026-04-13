@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence · Methodology</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Collapsible method cards — only heading visible by default */
+.method-grid { display: grid; grid-template-columns: 1fr; gap: 0.55rem; }
+
+details.method-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 0;
+  transition: border-color 0.15s;
+}
+details.method-card[open] {
+  border-color: var(--gold-dim);
+}
+details.method-card > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+}
+details.method-card > summary::-webkit-details-marker { display: none; }
+details.method-card > summary .method-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+details.method-card > summary h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  flex: 1;
+}
+details.method-card > summary::after {
+  content: "▸";
+  font-size: 0.7rem;
+  color: var(--gold);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+details.method-card[open] > summary::after { transform: rotate(90deg); }
+details.method-card > summary:hover h3 { color: var(--gold); }
+
+details.method-card > ul {
+  margin: 0;
+  padding: 0 1.1rem 1rem 2.6rem;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+details.method-card > ul li {
+  margin-bottom: 0.45rem;
+}
+details.method-card > ul li:last-child { margin-bottom: 0; }
+
+.method-hero { margin-bottom: 1rem; }
+.method-hero h1 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap" aria-hidden="true">
+          <div class="brand-diamond"></div>
+          <div class="brand-rule"></div>
+        </div>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <div class="sidebar-sub">Price Intelligence</div>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+        <a href="index.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+          Executive Overview
+        </a>
+        <a href="tracker.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="2" width="14" height="13" rx="1.5"/>
+            <line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+          </svg>
+          Price Tracker
+        </a>
+        <a href="sunset.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v1.5"/><path d="M12.24 4.76l-1.06 1.06"/>
+            <path d="M3.76 4.76l1.06 1.06"/><path d="M3 10h10"/><path d="M5 13h6"/>
+            <path d="M4.5 10A3.5 3.5 0 0 1 11.5 10"/><path d="M1 10h2M13 10h2"/>
+          </svg>
+          Sunset Analysis
+        </a>
+        <a href="trends.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 11 5 7 9 9 15 3"/>
+            <line x1="1" y1="15" x2="15" y2="15"/>
+          </svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 1H3a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 3 15h10a1.5 1.5 0 0 0 1.5-1.5V7L9 1z"/>
+            <polyline points="9 1 9 7 14.5 7"/>
+            <line x1="5" y1="10" x2="11" y2="10"/><line x1="5" y1="12.5" x2="8.5" y2="12.5"/>
+          </svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <div class="status-dot live"></div>
+        <span class="status-label">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="sidebarTs">Last updated: —</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Methodology</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate">—</span>
+        <button class="theme-toggle" id="themeToggle" title="Toggle light / dark mode" aria-label="Toggle light/dark mode">
+          <svg id="themeIcon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.7a1 1 0 11-1.41-1.41l.7-.71zM18 9a1 1 0 110 2h-1a1 1 0 110-2h1zm-1.78 5.78a1 1 0 010 1.42l-.7.7a1 1 0 11-1.42-1.41l.71-.71a1 1 0 011.41 0zM11 16a1 1 0 11-2 0v-1a1 1 0 112 0v1zm-5.78-.78a1 1 0 01-1.41 0l-.71-.7a1 1 0 011.41-1.42l.71.71a1 1 0 010 1.41zM4 10a1 1 0 110-2H3a1 1 0 110 2h1zm1.22-6.22a1 1 0 010 1.41l-.71.71A1 1 0 013.1 4.49l.7-.71a1 1 0 011.42 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Hero -->
+      <div class="method-hero fade-up">
+        <h1>Methodology</h1>
+      </div>
+
+      <!-- Cards grid -->
+      <div class="method-grid">
+
+        <!-- Data Collection -->
+        <details class="method-card fade-up" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 1v14M1 8h14"/><circle cx="8" cy="8" r="7"/>
+              </svg>
+            </div>
+            <h3>Data Collection</h3>
+          </summary>
+          <ul>
+            <li>4 attractions: Empire State Building, Edge Hudson Yards, Summit One Vanderbilt, Top of the Rock.</li>
+            <li>1 scrape per day. Scraper enters each attraction's public booking widget and reads every tour time and price. Public data only, no private API endpoints.</li>
+            <li>Playwright (Microsoft browser automation) drives a real Chromium browser. Standard clicks, keystrokes, waits. Same behavior as a guest booking manually.</li>
+            <li>TOR uses bot-protection. Scraper presents a standard browser identity to clear it.</li>
+            <li>Forward windows vary by attraction. ESB sells 173 days out (~6 months). Summit sells 200 days (~6.5 months). Edge and TOR sell 265 days (~9 months).</li>
+            <li>Apr 12 2026 scrape: ESB 9,568 rows across 172 dates. Edge 20,868 rows across 267 dates. Summit 5,371 rows across 199 dates. TOR 22,929 rows across 264 dates.</li>
+          </ul>
+        </details>
+
+        <!-- Schema -->
+        <details class="method-card fade-up anim-d1" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="14" height="10" rx="1"/><line x1="1" y1="7" x2="15" y2="7"/>
+                <line x1="5" y1="3" x2="5" y2="13"/>
+              </svg>
+            </div>
+            <h3>Schema &amp; Key Fields</h3>
+          </summary>
+          <ul>
+            <li><code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--gold)">attraction</code>: attraction key (esb, edge, summit, totr)</li>
+            <li><code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--gold)">travel_date</code>: guest visit date (YYYY-MM-DD)</li>
+            <li><code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--gold)">tour_time</code>: tour time (e.g. "10:30 AM")</li>
+            <li><code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--gold)">price_cents</code>: base price in cents, before booking fee. Null if unavailable or sold out.</li>
+            <li><code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--gold)">status</code>: available, sold_out, going_fast</li>
+            <li><code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--gold)">scrape_date</code>: date row was captured</li>
+          </ul>
+        </details>
+
+        <!-- Comparability -->
+        <details class="method-card fade-up" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 8h12M2 4h12M2 12h12"/>
+              </svg>
+            </div>
+            <h3>Making Prices Comparable</h3>
+          </summary>
+          <ul>
+            <li>Base price only is stored. Booking fees not in the JSON. All-in price computed at display time.</li>
+            <li>Standard: single adult GA, same travel date.</li>
+            <li>Tour time intervals vary: ESB every 15 min, Summit every 30 min, Edge and TOR every 10 min. Cross-attraction comparisons match to nearest available tour time within ±30 min.</li>
+            <li>Booking fees: ESB $5 flat per order. Edge $2 per ticket. Summit $3 flat per order. TOR fee embedded in displayed price.</li>
+            <li>1-ticket all-in (Apr 2026): ESB $49, Edge $42, Summit $47, TOR $42. ESB is $5 to $7 higher at 1 ticket. Fee math shifts at larger party sizes.</li>
+          </ul>
+        </details>
+
+        <!-- Anomaly Handling -->
+        <details class="method-card fade-up anim-d1" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 1l7 14H1L8 1z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>Anomaly Handling</h3>
+          </summary>
+          <ul>
+            <li>Sold-out tour times carry forward the last known price. Shown as "Sold Out" on tracker, excluded from averages, retained for same-date comparisons.</li>
+            <li>Zero-row scrapes block publish. Yesterday's data stays live until the next successful run.</li>
+            <li>Failure alerts fire via Gmail (OAuth) within seconds. Alert includes attraction name, row counts, and traceback.</li>
+            <li>Outliers flagged, not deleted. Threshold: price more than 3 standard deviations from 30-day rolling mean. Real price spikes (holidays, competitive moves) appear as outliers on day one but are retained.</li>
+            <li>Known closures (Summit private-event days) render as "Closed" in the tracker.</li>
+          </ul>
+        </details>
+
+        <!-- Upsell Detection -->
+        <details class="method-card fade-up" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 12V4m0 0l-3 3m3-3l3 3"/><circle cx="8" cy="14" r="1" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>Sunset Detection</h3>
+          </summary>
+          <ul>
+            <li><strong>Sunset premium = peak evening price minus same-date noon price.</strong> Noon is the baseline because every attraction sells a noon tour time and noon prices are never sunset-inflated.</li>
+            <li><strong>ESB:</strong> Tour times labeled "Sunset" or "Twilight" in the booking widget. Peak price in that window minus noon price.</li>
+            <li><strong>TOR:</strong> Tour times labeled "Sunset" in the booking widget (e.g. "5:00 PM Sunset"). 9 price tiers at $3 intervals ($42 to $71). Dynamic by date.</li>
+            <li><strong>Edge:</strong> Tour times labeled "Sunset" in the booking widget. Peak price in 4:00 PM to 9:00 PM window minus noon. 26 distinct prices observed, $1 steps.</li>
+            <li><strong>Summit:</strong> No sunset label. Two price bands per date: floor and peak. $13 step on 199 of 200 dates (99.5%). Peak band = sunset window.</li>
+          </ul>
+        </details>
+
+        <!-- AI Utilization -->
+        <details class="method-card fade-up anim-d1" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="12" height="12" rx="2"/>
+                <path d="M6 6h4M6 9h4M6 12h2"/>
+              </svg>
+            </div>
+            <h3>AI Utilization</h3>
+          </summary>
+          <ul>
+            <li><strong>Claude Code (Anthropic):</strong> Full system architecture, scraper implementation, schema design, data pipeline, static site (5 pages), sunset detection algorithm, case study document.</li>
+            <li><strong>48-hour build.</strong> Manual estimate: 5-6 weeks with a 2-person team.</li>
+            <li><strong>Competitor API discovery:</strong> Some booking platforms expose API endpoints queryable at scale. This approach likely violates terms of service. Production collection uses only public booking widget interaction, equivalent to manual guest behavior.</li>
+            <li><strong>AI limitations:</strong> Cannot predict competitor pricing intent, cannot capture login-gated rates, cannot forecast site structure changes.</li>
+          </ul>
+        </details>
+
+        <!-- Limitations -->
+        <details class="method-card fade-up" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8" cy="8" r="7"/>
+                <line x1="8" y1="4" x2="8" y2="8"/>
+                <line x1="8" y1="11" x2="8" y2="12"/>
+              </svg>
+            </div>
+            <h3>Limitations</h3>
+          </summary>
+          <ul>
+            <li>Prices reflect scrape-time widget display. Fees layered in UI, not stored. Checkout totals can differ if fee structure changes between runs.</li>
+            <li>No pre-launch baseline. Tool created April 2026. History grows one day per run.</li>
+            <li>TOR uses bot-protection. Scraper clears it with a standard browser identity. Site-side changes may require re-tuning.</li>
+            <li>IP throttling or site rebuilds can break a scraper without warning. Validation gate prevents empty runs from overwriting good data. Gaps possible until patched.</li>
+            <li>Reseller pricing (Viator, GetYourGuide) not captured. Direct ticket pages only. Adding resellers: 1-month build.</li>
+            <li>Forward windows differ. ESB 173 days (~6 months), Summit 200 days (~6.5 months), Edge and TOR 265 days (~9 months). Comparative analysis limited to the ESB window.</li>
+          </ul>
+        </details>
+
+        <!-- Assumptions -->
+        <details class="method-card fade-up" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8" cy="8" r="7"/><path d="M8 5v3l2 2"/>
+              </svg>
+            </div>
+            <h3>Assumptions</h3>
+          </summary>
+          <ul>
+            <li><strong>GA only:</strong> All comparisons use general-admission pricing. Premium tiers (Express, VIP, Sunrise) excluded.</li>
+            <li><strong>Single adult:</strong> One ticket, one adult. No child/senior rates, no group discounts.</li>
+            <li><strong>Base price:</strong> Price before booking fees. All-in computed at display time using known fee structures.</li>
+            <li><strong>Same travel date:</strong> Cross-attraction comparisons always use the same calendar date.</li>
+            <li><strong>Nearest tour time:</strong> When comparing sunset pricing, each ESB tour time matched to nearest competitor tour time within ±30 min.</li>
+            <li><strong>Noon baseline:</strong> Sunset premium = peak evening price minus noon price. Noon chosen because all attractions sell it and none price it as sunset.</li>
+            <li><strong>Sold-out carry-forward:</strong> When a tour time sells out, last known price retained for trend analysis.</li>
+            <li><strong>No reseller pricing:</strong> Direct booking widget only. OTA prices (Viator, GetYourGuide) not captured.</li>
+          </ul>
+        </details>
+
+        <!-- Infrastructure -->
+        <details class="method-card fade-up anim-d1" open>
+          <summary>
+            <div class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="1" width="14" height="4" rx="1"/>
+                <rect x="1" y="7" width="14" height="4" rx="1"/>
+                <rect x="1" y="13" width="14" height="2" rx="1"/>
+                <circle cx="13" cy="3" r="0.5" fill="currentColor"/>
+                <circle cx="13" cy="9" r="0.5" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>Infrastructure &amp; Deployment</h3>
+          </summary>
+          <ul>
+            <li><strong>Current build (pilot):</strong> Local machine, SQLite, JSON export, GitHub Pages, shared password. Adequate for 48-hour demo. Not production-grade.</li>
+            <li><strong>Help chatbot (bottom-right corner):</strong> Plain-language Q&amp;A on pricing data, sunset logic, and methodology.</li>
+            <li><strong>Production build:</strong> Azure tenant. Container Apps Jobs (daily cron). PostgreSQL (audit, backups). Blob Storage + CDN (JSON). Static Web Apps + Entra ID SSO (IT-provisioned access). Key Vault (secrets). Monitor (alerting).</li>
+            <li><strong>Cost:</strong> $58 to $99/month.</li>
+            <li><strong>GitHub Actions:</strong> Workflow in repo, dormant. Enable in settings to activate daily scrape.</li>
+          </ul>
+        </details>
+
+      </div><!-- /method-grid -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+if (sessionStorage.getItem('ps_auth') !== '1') location.replace('auth.html');
+document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-US',
+  {weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+// Fetch last updated from meta.json
+fetch('data/meta.json', { cache: 'no-store' })
+  .then(r => r.json())
+  .then(m => {
+    const d = m.built_at ? new Date(m.built_at) : null;
+    if (d) document.getElementById('sidebarTs').textContent = 'Last updated: ' +
+      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  })
+  .catch(() => {});
+
+// ── Theme toggle ──────────────────────────────────────────────
+(function () {
+  const DARK_ICON = '<path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.7a1 1 0 11-1.41-1.41l.7-.71zM18 9a1 1 0 110 2h-1a1 1 0 110-2h1zm-1.78 5.78a1 1 0 010 1.42l-.7.7a1 1 0 11-1.42-1.41l.71-.71a1 1 0 011.41 0zM11 16a1 1 0 11-2 0v-1a1 1 0 112 0v1zm-5.78-.78a1 1 0 01-1.41 0l-.71-.7a1 1 0 011.41-1.42l.71.71a1 1 0 010 1.41zM4 10a1 1 0 110-2H3a1 1 0 110 2h1zm1.22-6.22a1 1 0 010 1.41l-.71.71A1 1 0 013.1 4.49l.7-.71a1 1 0 011.42 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/>';
+  const LIGHT_ICON = '<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>';
+  const btn = document.getElementById('themeToggle');
+  const icon = document.getElementById('themeIcon');
+  if (localStorage.getItem('ps_theme') === 'light' && icon) icon.innerHTML = LIGHT_ICON;
+  if (btn) {
+    btn.addEventListener('click', function () {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('ps_theme', 'dark');
+        if (icon) icon.innerHTML = DARK_ICON;
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('ps_theme', 'light');
+        if (icon) icon.innerHTML = LIGHT_ICON;
+      }
+    });
+  }
+})();
+</script>
+<script src="chat-widget.js" defer></script>
+</body>
+</html>

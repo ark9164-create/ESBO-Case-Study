@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence · Executive Overview</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* Page-specific: sparkline for the mini chart in stat card */
+.stat-spark {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 90px; height: 36px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.page-intro {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-intro-orn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pi-diamond {
+  width: 6px; height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.pi-rule {
+  height: 1px; width: 28px;
+  background: linear-gradient(90deg, var(--gold-dim), transparent);
+}
+
+.page-intro-text {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.page-intro-date {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  margin-left: auto;
+}
+
+/* Section rule with label */
+.section-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.85rem;
+}
+
+.section-rule-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-rule-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* Expand chevron on cal rows */
+.expand-icon {
+  width: 14px; height: 14px;
+  color: var(--text-dim);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+tr.expanded .expand-icon { transform: rotate(90deg); }
+
+/* Progressive disclosure — collapsible secondary sections */
+details.slim-section {
+  margin: 0.6rem 0 0.85rem;
+}
+details.slim-section > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  user-select: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+details.slim-section > summary::-webkit-details-marker { display: none; }
+details.slim-section > summary::before {
+  content: "▸";
+  font-size: 0.65rem;
+  color: var(--gold);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+details.slim-section[open] > summary::before { transform: rotate(90deg); }
+details.slim-section > summary:hover {
+  color: var(--text-primary);
+  border-color: var(--gold-dim);
+}
+details.slim-section > *:not(summary) {
+  margin-top: 0.75rem;
+}
+
+/* slim-panel variant: a panel that is also a <details> */
+details.slim-panel {
+  /* inherits .panel */
+}
+details.slim-panel > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+details.slim-panel > summary::-webkit-details-marker { display: none; }
+details.slim-panel > summary::after {
+  content: "▸";
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin-left: 0.6rem;
+  transition: transform 0.18s;
+  display: inline-block;
+}
+details.slim-panel[open] > summary::after { transform: rotate(90deg); }
+details.slim-panel > summary:hover .panel-title { color: var(--gold); }
+
+/* ── Limited-Time Offers panel ── */
+.offers-wrap {
+  padding: 0.5rem 1.1rem 1.1rem;
+}
+.offers-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.85rem;
+}
+.offers-past-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 3px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.offers-past-btn:hover { border-color: var(--gold); color: var(--gold); }
+.offers-past-btn.active { border-color: var(--gold-border); color: var(--gold); background: var(--gold-subtle); }
+.offers-venue-block { margin-bottom: 1.1rem; }
+.offers-venue-block:last-child { margin-bottom: 0; }
+.offers-venue-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.55rem;
+}
+.offer-card {
+  background: var(--bg-panel-alt, var(--bg-base));
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 0.65rem 0.75rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: border-color 0.15s;
+}
+.offer-card:hover { border-color: var(--gold-border); }
+.offer-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.offer-name {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  text-decoration: none;
+}
+.offer-name:hover { color: var(--gold); }
+.offer-expiry {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 2px;
+  white-space: normal;
+  line-height: 1.25;
+  text-align: right;
+  max-width: 9rem;
+  flex-shrink: 0;
+}
+.offer-expiry.urgent { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+.offer-expiry.soon { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+.offer-expiry.active { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
+.offer-expiry.upcoming { background: var(--gold-subtle); color: var(--gold); border: 1px solid var(--gold-border); }
+.offer-expiry.past { background: rgba(148,163,184,0.08); color: var(--text-dim); border: 1px solid var(--border); }
+.offer-price {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: var(--font-mono);
+}
+.offer-desc {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.past-offers-section {
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.past-offers-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.65rem;
+}
+
+/* ── Matrix tier-row expand/collapse ────────────────────── */
+.matrix-table tr.tier-row { cursor: pointer; }
+.matrix-table tr.tier-row td:first-child {
+  padding-left: 0.65rem;
+}
+.matrix-table .expand-chev {
+  display: inline-block;
+  width: 10px;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  margin-right: 7px;
+  transition: transform 0.15s, color 0.15s;
+}
+.matrix-table tr.tier-row.open .expand-chev {
+  transform: rotate(90deg);
+  color: var(--gold);
+}
+.matrix-table tr.tier-row.open td {
+  background: var(--bg-card-hover);
+}
+.matrix-table tr.tier-detail-row { display: none; }
+.matrix-table tr.tier-detail-row.open { display: table-row; }
+.matrix-table tr.tier-detail-row td {
+  padding: 0;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+.tier-detail-grid {
+  display: grid;
+  grid-template-columns: 18% repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.75rem 0.9rem;
+}
+.tier-detail-venue {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left-width: 2px;
+  border-radius: 4px;
+  padding: 0.55rem 0.7rem 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: left;
+}
+.tier-detail-venue.esb    { border-left-color: var(--esb); }
+.tier-detail-venue.edge   { border-left-color: var(--edge); }
+.tier-detail-venue.summit { border-left-color: var(--summit); }
+.tier-detail-venue.totr   { border-left-color: var(--totr); }
+.tier-detail-name {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+.tier-detail-venue.esb    .tier-detail-name { color: var(--esb); }
+.tier-detail-venue.edge   .tier-detail-name { color: var(--edge); }
+.tier-detail-venue.summit .tier-detail-name { color: var(--summit); }
+.tier-detail-venue.totr   .tier-detail-name { color: var(--totr); }
+.tier-detail-text strong { color: var(--text-primary); font-weight: 600; }
+
+@media (max-width: 900px) {
+  .tier-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tier-detail-grid > div:first-child:empty { display: none; }
+}
+@media (max-width: 560px) {
+  .tier-detail-grid { grid-template-columns: 1fr; }
+  .tier-detail-grid > div:first-child:empty { display: none; }
+}
+
+/* ── Same-Day Time-of-Day Benchmark panel ─────────────── */
+.tg-section { margin-top: 0.85rem; }
+.tg-controls {
+  padding: 0.95rem 1.2rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: var(--r);
+  display: flex;
+  align-items: flex-end;
+  gap: 1.2rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+.tg-control-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.tg-control-label {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.tg-select {
+  padding: 0.55rem 0.85rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.86rem; font-family: inherit;
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  min-width: 10rem; cursor: pointer;
+}
+.tg-select:focus { outline: none; border-color: var(--gold); }
+.tg-controls-hint {
+  flex: 1; min-width: 16rem;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  padding-bottom: 0.35rem;
+}
+
+.tg-panel {
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: var(--r);
+  padding: 1.05rem 1.3rem 1.15rem;
+  margin-bottom: 0.85rem;
+}
+.tg-panel-head {
+  display: flex; justify-content: space-between;
+  align-items: baseline; margin-bottom: 0.95rem;
+  gap: 0.8rem;
+}
+.tg-panel-title {
+  font-size: 0.98rem; font-weight: 700;
+  color: var(--gold);
+}
+.tg-panel-title .tg-title-meta {
+  color: var(--text-secondary); font-weight: 500;
+  font-size: 0.8rem; margin-left: 0.4rem;
+}
+.tg-panel-sub {
+  font-size: 0.74rem; color: var(--text-dim);
+  font-style: italic; margin-top: 0.2rem;
+}
+.tg-card-row {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.tg-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.85rem 0.55rem 0.9rem;
+  text-align: center;
+  min-height: 110px;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+}
+.tg-card.is-sunset {
+  border-color: var(--gold);
+  background: var(--gold-subtle);
+  box-shadow: 0 0 0 1px var(--gold-border);
+}
+.tg-card-label {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.tg-card.is-sunset .tg-card-label {
+  color: var(--gold);
+  font-weight: 700;
+}
+.tg-card-time {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  margin-bottom: 0.55rem;
+  line-height: 1.3;
+}
+.tg-card-price {
+  font-size: 1.35rem; font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+.tg-card.is-empty { opacity: 0.42; }
+.tg-card.is-empty .tg-card-price { color: var(--text-dim); }
+
+.tg-matrix { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tg-matrix th {
+  text-align: left;
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.tg-matrix td {
+  padding: 0.78rem 0.8rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+}
+.tg-matrix td.tg-row-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+}
+.tg-matrix tr.is-sunset td.tg-row-label {
+  color: var(--gold);
+  font-weight: 600;
+}
+.tg-matrix td.tg-esb-cell {
+  color: var(--gold);
+  font-weight: 700;
+}
+.tg-matrix td.tg-delta.tg-neg { color: var(--up); }
+.tg-matrix td.tg-delta.tg-pos { color: var(--down); font-weight: 700; }
+.tg-matrix td.tg-delta.tg-zero { color: var(--text-dim); }
+.tg-matrix td.tg-empty { color: var(--text-dim); }
+.tg-matrix tr:last-child td { border-bottom: none; }
+.tg-matrix tr.tg-selected-time td { background: rgba(201,168,76,0.07); }
+.tg-matrix tr.tg-selected-time td.tg-row-label { color: var(--gold); font-weight: 700; }
+.tg-selected-badge { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: var(--gold); color: #1a1410; padding: 1px 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+.tg-matrix-loading,
+.tg-matrix-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 1100px) {
+  .tg-card-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .tg-card-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tg-controls { gap: 0.85rem; }
+  .tg-controls-hint { display: none; }
+}
+
+/* Tour time selector */
+.tg-select-time { min-width: 14rem; }
+.tg-add-btn {
+  padding: 0.55rem 1.3rem;
+  background: var(--gold);
+  color: #1a1308;
+  border: none;
+  border-radius: var(--r-sm);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  white-space: nowrap;
+  align-self: flex-end;
+  margin-bottom: 0.05rem;
+}
+.tg-add-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.tg-add-btn:active { transform: translateY(0); filter: brightness(0.95); }
+
+/* Comparison panel */
+.tg-compare-panel { border-color: var(--gold-border); }
+.tg-clear-btn {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.tg-clear-btn:hover { border-color: var(--down); color: var(--down); }
+.tg-compare-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.tg-compare-table th {
+  text-align: left;
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  padding: 0.7rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+.tg-compare-table td {
+  padding: 0.72rem 0.65rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+}
+.tg-compare-table td.tg-row-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.86rem;
+}
+.tg-compare-table td.tg-row-date {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.tg-compare-table td.tg-esb-cell { color: var(--gold); font-weight: 700; }
+.tg-compare-table td.tg-delta.tg-neg { color: var(--up); }
+.tg-compare-table td.tg-delta.tg-pos { color: var(--down); font-weight: 700; }
+.tg-compare-table td.tg-delta.tg-zero { color: var(--text-dim); }
+.tg-compare-table td.tg-empty { color: var(--text-dim); }
+.tg-compare-table tr:last-child td { border-bottom: none; }
+.tg-row-time-hint {
+  font-size: 0.68rem; color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.tg-remove-btn {
+  background: none; border: none;
+  color: var(--text-dim); cursor: pointer;
+  font-size: 0.9rem; padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+}
+.tg-remove-btn:hover { color: var(--down); background: rgba(239,68,68,0.08); }
+.tg-compare-panel .tg-panel-head { flex-wrap: wrap; }
+@media (max-width: 900px) {
+  .tg-compare-table { font-size: 0.8rem; }
+  .tg-compare-table th, .tg-compare-table td { padding: 0.55rem 0.4rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap" aria-hidden="true">
+          <div class="brand-diamond"></div>
+          <div class="brand-rule"></div>
+        </div>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <div class="sidebar-sub">Price Intelligence</div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+
+        <a href="index.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="6" height="6" rx="1"/>
+            <rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/>
+            <rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+          Executive Overview
+        </a>
+
+        <a href="tracker.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="2" width="14" height="13" rx="1.5"/>
+            <line x1="5" y1="1" x2="5" y2="4"/>
+            <line x1="11" y1="1" x2="11" y2="4"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+          </svg>
+          Price Tracker
+        </a>
+
+        <a href="sunset.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v1.5"/>
+            <path d="M12.24 4.76l-1.06 1.06"/>
+            <path d="M3.76 4.76l1.06 1.06"/>
+            <path d="M3 10h10"/>
+            <path d="M5 13h6"/>
+            <path d="M4.5 10A3.5 3.5 0 0 1 11.5 10"/>
+            <path d="M1 10h2M13 10h2"/>
+          </svg>
+          Sunset Analysis
+        </a>
+
+        <a href="trends.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 11 5 7 9 9 15 3"/>
+            <line x1="1" y1="15" x2="15" y2="15"/>
+          </svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 1H3a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 3 15h10a1.5 1.5 0 0 0 1.5-1.5V7L9 1z"/>
+            <polyline points="9 1 9 7 14.5 7"/>
+            <line x1="5" y1="10" x2="11" y2="10"/>
+            <line x1="5" y1="12.5" x2="8.5" y2="12.5"/>
+          </svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <div class="status-dot live" id="statusDot"></div>
+        <span class="status-label" id="statusLabel">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="sidebarTs">Last updated: —</div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN
+  ════════════════════════════════════════════ -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Executive Overview</h1>
+        <span class="topbar-crumb">NYC Observation Decks · Competitor Pricing</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate">—</span>
+        <span class="chip live"><span class="dot"></span>4 Attractions Tracked</span>
+        <button class="theme-toggle" id="themeToggle" title="Toggle light / dark mode" aria-label="Toggle light/dark mode">
+          <svg id="themeIcon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.7a1 1 0 11-1.41-1.41l.7-.71zM18 9a1 1 0 110 2h-1a1 1 0 110-2h1zm-1.78 5.78a1 1 0 010 1.42l-.7.7a1 1 0 11-1.42-1.41l.71-.71a1 1 0 011.41 0zM11 16a1 1 0 11-2 0v-1a1 1 0 112 0v1zm-5.78-.78a1 1 0 01-1.41 0l-.71-.7a1 1 0 011.41-1.42l.71.71a1 1 0 010 1.41zM4 10a1 1 0 110-2H3a1 1 0 110 2h1zm1.22-6.22a1 1 0 010 1.41l-.71.71A1 1 0 013.1 4.49l.7-.71a1 1 0 011.42 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Page intro bar (minimal) -->
+      <div class="page-intro">
+        <div class="page-intro-orn" aria-hidden="true">
+          <div class="pi-diamond"></div>
+          <div class="pi-rule"></div>
+        </div>
+        <span class="page-intro-date" id="introCoverage">Coverage: loading…</span>
+      </div>
+
+      <!-- ── KPI Row ── -->
+      <div class="stat-row" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <div class="stat-card fade-up anim-d3">
+          <div class="stat-kicker">Price Moves (latest run)</div>
+          <div class="stat-value" id="kpi-changes">—</div>
+          <div class="stat-sub" id="kpi-change-detail">Loading…</div>
+        </div>
+        <div class="stat-card fade-up anim-d4">
+          <div class="stat-kicker">Forward Coverage</div>
+          <div class="stat-value" id="kpi-window">—</div>
+          <div class="stat-sub" id="kpi-window-detail">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ── Section label ── -->
+      <div class="section-rule">
+        <div class="section-rule-line"></div>
+        <span class="section-rule-label">Competitive Pricing Matrix</span>
+        <div class="section-rule-line"></div>
+      </div>
+
+      <!-- ── Main grid: matrix + pulse ── -->
+      <div class="two-col fade-up anim-d2" style="margin-bottom:0.85rem;">
+
+        <!-- Price Matrix -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><span class="bar"></span>Product Tier Matrix</div>
+            <span class="panel-meta" id="matrixDate">As of today</span>
+          </div>
+          <div>
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th class="th-esb">
+                    <svg width="6" height="6" viewBox="0 0 6 6" style="display:inline;margin-right:4px;vertical-align:middle;"><circle cx="3" cy="3" r="3" fill="var(--esb)"/></svg><a href="https://www.esbnyc.com/ticket-info-offers" target="_blank" rel="noopener">ESB</a>
+                  </th>
+                  <th class="th-edge">
+                    <svg width="6" height="6" viewBox="0 0 6 6" style="display:inline;margin-right:4px;vertical-align:middle;"><circle cx="3" cy="3" r="3" fill="var(--edge)"/></svg><a href="https://www.edgenyc.com/general-admission-ticket-edge/" target="_blank" rel="noopener">Edge</a>
+                  </th>
+                  <th class="th-summit">
+                    <svg width="6" height="6" viewBox="0 0 6 6" style="display:inline;margin-right:4px;vertical-align:middle;"><circle cx="3" cy="3" r="3" fill="var(--summit)"/></svg><a href="https://summitov.com/tickets/" target="_blank" rel="noopener">Summit</a>
+                  </th>
+                  <th class="th-totr">
+                    <svg width="6" height="6" viewBox="0 0 6 6" style="display:inline;margin-right:4px;vertical-align:middle;"><circle cx="3" cy="3" r="3" fill="var(--totr)"/></svg><a href="https://www.rockefellercenter.com/buy-tickets/top-of-the-rock/" target="_blank" rel="noopener">TOR</a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tier-row" data-tier="ga">
+                  <td><span class="expand-chev">▸</span>General Admission (Adult)</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/86th-floor-observatory" target="_blank" rel="noopener" class="p-link"><span class="p-gold">from $44.00</span><span class="mini-badge dyn">Dyn</span></a></td>
+                  <td><a href="https://www.edgenyc.com/general-admission-ticket-edge/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">from $42.00</span><span class="mini-badge dyn">Dyn</span></a></td>
+                  <td><a href="https://summitov.com/tickets/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">from $44.00</span><span class="mini-badge dyn">Dyn</span></a></td>
+                  <td><a href="https://www.rockefellercenter.com/buy-tickets/top-of-the-rock/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">from $42.00</span><span class="mini-badge dyn">Dyn</span></a></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="ga">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>7 price points, $44-$62.</strong> $62 peak on 60.5% of dates (n=172). $44 floor on 46% of tour times (late evening only). Early Access ($61-$67) is a separate SKU, excluded from GA stats.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>26 price points, $42-$69.</strong> $1 steps. 64 live reprices observed across 5 travel dates between two daily scrapes. Only attraction with intraday movement. Advance Saver: below $42 at 14+ days out.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text"><strong>6 price points, $44-$68.</strong> $13 floor-to-peak step on 99.5% of dates (n=198). Prices set by tier grid, not demand. No intraday repricing.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text"><strong>9 price points, $42-$71.</strong> $3 step ladder. Fee embedded. Sunset tour times tagged in booking widget. No intraday repricing.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="advance">
+                  <td><span class="expand-chev">▸</span>Advance Purchase</td>
+                  <td><span class="p-na">—</span></td>
+                  <td><a href="https://www.edgenyc.com/advance-saver-ticket/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $34.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">–35% · 14+ days</span></td>
+                  <td><span class="p-na">—</span></td>
+                  <td><span class="p-na">—</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="advance">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text">None. Same rate at all lead times.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>Up to 35% off at 14+ days out.</strong> Only advance-purchase discount in the comp set.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text">None.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text">None. Tiers set by date, not lead time.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="flex">
+                  <td><span class="expand-chev">▸</span>Flex / Open-Dated</td>
+                  <td><a href="https://www.esbnyc.com/tickets/empire-state-building-flex-ticket" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $64.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><a href="https://www.edgenyc.com/flex-admission-ticket/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $64.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><span class="p-na">—</span></td>
+                  <td><span class="p-na">—</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="flex">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>$64.</strong> Any date, no tour time required.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>$64.</strong> Matches ESB all-in.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text">None.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text">None.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="premium-deck">
+                  <td><span class="expand-chev">▸</span>Premium Deck Add-on</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/102nd-86th-floor-observatories" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $79.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">102nd + 86th combo</span></td>
+                  <td><span class="p-na">—</span></td>
+                  <td><a href="https://summitov.com/ascent/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">from $68.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">Ascent (glass elev.)</span></td>
+                  <td><a href="https://www.rockefellercenter.com/skylift/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">+$35.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">SKYLIFT add-on</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="premium-deck">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>$79 Combo (102nd + 86th).</strong> 1,250 ft. Only attraction with a second priced deck.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text">None. Single observation level.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text"><strong>From $68 (Ascent).</strong> External glass elevator to 1,210 ft. Variable tier grid.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text"><strong>+$35 add-on (SKYLIFT).</strong> Rooftop thrill ride, 3 stories above the observation deck. Priced as add-on, not standalone.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="express">
+                  <td><span class="expand-chev">▸</span>Skip-the-Line / Express</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/express-pass-86th-floor" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">from $85.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><a href="https://www.edgenyc.com/priority-access-ticket/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$94.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><span class="p-na">—</span></td>
+                  <td><a href="https://www.rockefellercenter.com/buy-tickets/express-pass/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $115.00</span><span class="mini-badge ref">Ref</span></a></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="express">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>From $85.</strong> Dynamic on the GA curve. Lowest in set by $9.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>$94.</strong> Manually observed reference price. Not scraped.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text">None.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text"><strong>$115.</strong> Highest in set. +$21 vs. Edge, +$30 vs. ESB.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="fnb">
+                  <td><span class="expand-chev">▸</span>F&amp;B Bundle</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/sunrise-esb" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$135.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">Starbucks Sunrise</span></td>
+                  <td><a href="https://www.edgenyc.com/tickets/champagne-experience/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $61.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">Champagne Experience</span></td>
+                  <td><a href="https://summitov.com/tickets/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">from $58.00</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">GA + cocktail bundle</span></td>
+                  <td><a href="https://www.rockefellercenter.com/attractions/top-of-the-rock-observation-deck/weather-room/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">Var.</span></a><br><span class="p-dyn" style="font-size:0.65rem;">Weather Room</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="fnb">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>$135 (Sunrise).</strong> No F&amp;B entry below $135. Gap of $50-100 vs. competitors.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>From $61 (Champagne).</strong> Lowest F&amp;B in set. Spring Value Bundle from $49 (GA + popcorn + beverage).</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text"><strong>From $58 (GA + cocktail).</strong> Variable tier grid.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text"><strong>Variable (Weather Room).</strong> Priced separately from GA.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="vip">
+                  <td><span class="expand-chev">▸</span>Full Premium / VIP</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/premium-experience" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$175.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><a href="https://www.edgenyc.com/premium-bundles/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $89.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><a href="https://summitov.com/summit-premium-experience/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$149.00</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><a href="https://www.rockefellercenter.com/buy-tickets/vip/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">from $200.00</span><span class="mini-badge ref">Ref</span></a></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="vip">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>$175.</strong> Mid-tier: +$26 vs. Summit, -$25 vs. TOR.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>$89.</strong> Bundle tier, not true VIP.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text"><strong>$149.</strong> Lowest true VIP in set.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text"><strong>$200.</strong> Highest in set.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="sunset">
+                  <td><span class="expand-chev">▸</span>Sunset Window Upcharge</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/86th-floor-observatory" target="_blank" rel="noopener" class="p-link"><span class="p-gold">+$10</span><span class="mini-badge ref">Ref</span></a><br><span class="p-dyn" style="font-size:0.65rem;">Tour group tiered</span></td>
+                  <td><a href="https://www.edgenyc.com/priority-sunset-admission-ticket/" target="_blank" rel="noopener" class="p-link"><span class="p-dyn">Dynamic</span></a><br><span class="p-dyn" style="font-size:0.65rem;">+$16 median vs. noon</span></td>
+                  <td><span class="p-dyn">+$13 flat</span><br><span class="p-dyn" style="font-size:0.65rem;">99.5% of dates</span></td>
+                  <td><span class="p-dyn">Variable</span><br><span class="p-dyn" style="font-size:0.65rem;">+$12 median vs. noon</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="sunset">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>$18 median vs. floor ($12-$18 range), n=172.</strong> $62 peak on 60.5% of dates, $58 on 33.7%, $56 on 5.8%.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>$16 median vs. noon ($0-$22 range), n=265.</strong> $18 median vs. floor. Peak $63 median ($44-$69).</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text"><strong>$13 flat on 197/198 dates.</strong> Fixed $50 to $63 ladder. Peak $63 median ($57-$68).</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text"><strong>$12 median vs. noon, $18 median vs. floor, n=265.</strong> ~25 tour times tagged "Sunset" per date. Peak $68 median.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="annual">
+                  <td><span class="expand-chev">▸</span>Annual Pass / Membership</td>
+                  <td><span class="p-na">—</span></td>
+                  <td><a href="https://www.edgenyc.com/annual-pass/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$99.00</span><span class="mini-badge new">New</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><span class="p-na">—</span></td>
+                  <td><span class="p-na">—</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="annual">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text">None.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text"><strong>$99 (March 2026).</strong> Only pass in set. Breakeven at ~2.3 visits.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text">None.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text">None.</div></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="tier-row" data-tier="proposal">
+                  <td><span class="expand-chev">▸</span>Proposal / Photo Package</td>
+                  <td><a href="https://www.esbnyc.com/buy-tickets/happily-ever-after" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$1,000 / couple</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><span class="p-na">—</span></td>
+                  <td><a href="https://summitov.com/photo-packages/" target="_blank" rel="noopener" class="p-link"><span class="p-fixed">$1,100–$1,600</span><span class="mini-badge ref">Ref</span></a></td>
+                  <td><span class="p-na">—</span></td>
+                </tr>
+                <tr class="tier-detail-row" data-tier="proposal">
+                  <td colspan="5">
+                    <div class="tier-detail-grid">
+                      <div></div>
+                      <div class="tier-detail-venue esb"><div class="tier-detail-name">ESB</div><div class="tier-detail-text"><strong>$1,000/couple.</strong> Dedicated 86th corner, private tour, 102nd photo access. 24-hr advance booking. <strong>Access only, no photographer.</strong> Express tickets separate.</div></div>
+                      <div class="tier-detail-venue edge"><div class="tier-detail-name">Edge</div><div class="tier-detail-text">None.</div></div>
+                      <div class="tier-detail-venue summit"><div class="tier-detail-name">Summit</div><div class="tier-detail-text"><strong>$1,100 / $1,350 / $1,600.</strong> Silver, Gold, Platinum. <strong>Photographer included, 60 min private shoot.</strong> Sunset add-on +$100.</div></div>
+                      <div class="tier-detail-venue totr"><div class="tier-detail-name">TOR</div><div class="tier-detail-text">None. Rockefeller Center venue rental is separate from TOR.</div></div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:0.55rem 0.9rem; background:var(--bg-surface); border-top:1px solid var(--border); font-size:0.64rem; color:var(--text-dim);">
+            GA row: scraped daily, base price before fees. Other rows: verified Apr 10 via booking widget. Fees: ESB $5/txn · Edge $2/ticket · Summit $3/order · TOR included.
+          </div>
+        </div>
+
+        <!-- Market Pulse -->
+        <details class="panel slim-panel" open>
+          <summary class="panel-header">
+            <div class="panel-title"><span class="bar"></span>Market Pulse</div>
+            <span class="panel-meta" id="pulseMeta">Loading…</span>
+          </summary>
+
+          <div class="pulse-list" id="pulseList">
+            <div style="padding:1rem;font-size:0.72rem;color:var(--text-dim);">Loading price changes…</div>
+          </div>
+
+        </details>
+      </div>
+
+      <!-- ── Limited-Time Offers panel ── -->
+      <details class="panel slim-panel" style="margin-bottom:0.85rem;margin-top:0.85rem;">
+        <summary class="panel-header">
+          <div class="panel-title"><span class="bar"></span>Limited-Time Offers</div>
+          <span class="panel-meta">11 active · 4 attractions</span>
+        </summary>
+
+        <div class="offers-wrap">
+
+          <!-- ── ESB ── -->
+          <div class="offers-venue-block">
+            <div class="offers-venue-label">
+              <div class="venue-pip esb"></div>Empire State Building
+            </div>
+            <div class="offers-grid">
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.esbnyc.com/node/2961" target="_blank" rel="noopener">Ghirardelli Kong Sundae</a>
+                  <span class="offer-expiry soon">Apr 10 - May 10, 2026</span>
+                </div>
+                <div class="offer-price">$18 sundae · $11 cocoa</div>
+                <div class="offer-desc">86th Floor exclusive. Vanilla ice cream + Ghirardelli toppings. 10am–9pm daily.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.esbnyc.com/page/95-years-empire-state-building" target="_blank" rel="noopener">95th Anniversary</a>
+                  <span class="offer-expiry active">Jan 1 - Dec 31, 2026</span>
+                </div>
+                <div class="offer-price">—</div>
+                <div class="offer-desc">Calendar-year 2026 programming: Ghirardelli partnership, seasonal 86th Floor pop-ups.</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Edge ── -->
+          <div class="offers-venue-block">
+            <div class="offers-venue-label">
+              <div class="venue-pip edge"></div>Edge at Hudson Yards
+            </div>
+            <div class="offers-grid">
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/edge-spring-value-bundle/" target="_blank" rel="noopener">Spring Value Bundle</a>
+                  <span class="offer-expiry active">Ongoing</span>
+                </div>
+                <div class="offer-price">from $49</div>
+                <div class="offer-desc">GA + popcorn + beer/NA beverage. Lowest F&amp;B bundle in set. No posted end date.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/tickets/mothers-day-bundle/" target="_blank" rel="noopener">Mother's Day Bundle</a>
+                  <span class="offer-expiry soon">Around May 10, 2026</span>
+                </div>
+                <div class="offer-price">from $99</div>
+                <div class="offer-desc">Priority access + champagne + sweet treat. Timed to Mother's Day (May 10). No posted start/end date.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/tickets/premium-bundle-with-peach-smash/" target="_blank" rel="noopener">Premium Bundle: Peach Smash</a>
+                  <span class="offer-expiry active">Ongoing</span>
+                </div>
+                <div class="offer-price">from $89</div>
+                <div class="offer-desc">Flex arrival + full deck access + Peach Smash (NA cocktail). No posted end date.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/tickets/premium-bundle-with-seasonal-cocktail/" target="_blank" rel="noopener">Premium Bundle: Seasonal Cocktail</a>
+                  <span class="offer-expiry active">Ongoing</span>
+                </div>
+                <div class="offer-price">from $99</div>
+                <div class="offer-desc">Flex arrival + full deck access + seasonal cocktail. No posted end date.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/marquee-skydeck/" target="_blank" rel="noopener">Marquee Skydeck</a>
+                  <span class="offer-expiry upcoming">May 1 - Sep 30, 2026</span>
+                </div>
+                <div class="offer-price">TBD</div>
+                <div class="offer-desc">21+ late-night deck (11 PM–3 AM) by Tao Group. Named DJ lineups confirmed. Price TBD.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/experiences/" target="_blank" rel="noopener">New Immersive Experience</a>
+                  <span class="offer-expiry upcoming">Summer 2026 - exact date TBD</span>
+                </div>
+                <div class="offer-price">TBD</div>
+                <div class="offer-desc">Permanent kaleidoscopic light installation. Expected in GA; potential price increase at launch.</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Summit ── -->
+          <div class="offers-venue-block">
+            <div class="offers-venue-label">
+              <div class="venue-pip summit"></div>Summit One Vanderbilt
+            </div>
+            <div class="offers-grid">
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://summitov.com/2026-spring-break-bundle-at-summit/" target="_blank" rel="noopener">Spring Break Bundle</a>
+                  <span class="offer-expiry urgent">Through Apr 30, 2026</span>
+                </div>
+                <div class="offer-price">$40 / $59 / $99</div>
+                <div class="offer-desc">Experience $40 · Ascent $59 · Premium $99. Min. 4 tickets. Email opt-in required.</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── TOR ── -->
+          <div class="offers-venue-block">
+            <div class="offers-venue-label">
+              <div class="venue-pip totr"></div>Top of the Rock
+            </div>
+            <div class="offers-grid">
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.rockefellercenter.com/events/spring-break-at-rockefeller-center/" target="_blank" rel="noopener">Spring Family &amp; Kids Offers</a>
+                  <span class="offer-expiry urgent">Mar 10 - Apr 25, 2026</span>
+                </div>
+                <div class="offer-price">—</div>
+                <div class="offer-desc">Seasonal family programming. Free kids activities at TOR deck.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.rockefellercenter.com/art/" target="_blank" rel="noopener">Vertical Highways Public Art</a>
+                  <span class="offer-expiry urgent">Mar 18 - Apr 18, 2026</span>
+                </div>
+                <div class="offer-price">Included</div>
+                <div class="offer-desc">Public art installation at Rockefeller Center. Included with TOR admission.</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Past Offers ── -->
+          <div class="past-offers-section" id="pastOffersSection">
+            <div class="past-offers-label">Past offers · pages still live</div>
+            <div class="offers-grid">
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.esbnyc.com/buy-tickets/nyc-must-see-week" target="_blank" rel="noopener">ESB: NYC Must See Week</a>
+                  <span class="offer-expiry past">January 2026 - inactive</span>
+                </div>
+                <div class="offer-price">$44 (2-for-1)</div>
+                <div class="offer-desc">NYC Tourism &amp; Conventions annual event. 2-for-1 86th floor. Page live; no active 2026 dates.</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/tickets/nye-city-climb/" target="_blank" rel="noopener">Edge: City Climb</a>
+                  <span class="offer-expiry past">Temporarily closed</span>
+                </div>
+                <div class="offer-price">Was $80 / $125</div>
+                <div class="offer-desc">Exterior facade climb. Stated closed on edgenyc.com. Was $80 / $125 (photo).</div>
+              </div>
+
+              <div class="offer-card">
+                <div class="offer-card-head">
+                  <a class="offer-name" href="https://www.edgenyc.com/tickets/pinkmas-premium-bundle/" target="_blank" rel="noopener">Edge: Pinkmas / Museum of Ice Cream</a>
+                  <span class="offer-expiry past">Dec 1, 2025 - Feb 20, 2026</span>
+                </div>
+                <div class="offer-price">Was from $62</div>
+                <div class="offer-desc">Museum of Ice Cream winter activation. Ended Feb 20. Confirmed expired.</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </details>
+
+      <!-- ── Fee note panel (collapsible) ── -->
+      <details class="panel slim-panel" style="margin-bottom:0;">
+        <summary class="panel-header">
+          <div class="panel-title"><span class="bar"></span>Fee Comparability</div>
+          <span class="panel-meta">Solo vs. group · fee-per-ticket flips</span>
+        </summary>
+        <div class="panel-body-pad" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table class="matrix-table" style="min-width:640px;">
+              <thead>
+                <tr>
+                  <th>Attraction</th>
+                  <th>Base GA</th>
+                  <th>Fee</th>
+                  <th>Fee Unit</th>
+                  <th>Solo All-In</th>
+                  <th>Group of 4</th>
+                  <th style="text-align:center;">Per-Ticket<br><span style="font-weight:400;letter-spacing:0.05em;font-size:0.5rem;">at 4 tickets</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color:var(--esb);font-weight:600;">ESB</td>
+                  <td><span class="p-fixed">$44</span></td>
+                  <td><span class="p-fixed">$5</span></td>
+                  <td style="font-size:0.72rem;">per <em>transaction</em></td>
+                  <td><span class="p-fixed" style="color:var(--down);font-weight:700;">$49</span></td>
+                  <td><span class="p-fixed">$181</span></td>
+                  <td style="text-align:center;"><span class="p-fixed">$1.25</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--edge);font-weight:600;">Edge</td>
+                  <td><span class="p-fixed">$40</span></td>
+                  <td><span class="p-fixed">$2</span></td>
+                  <td style="font-size:0.72rem;">per <em>ticket</em> (scales)</td>
+                  <td><span class="p-fixed" style="color:var(--up);font-weight:700;">$42</span></td>
+                  <td><span class="p-fixed">$168</span></td>
+                  <td style="text-align:center;"><span class="p-fixed">$2.00</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--summit);font-weight:600;">Summit</td>
+                  <td><span class="p-fixed">$44</span></td>
+                  <td><span class="p-fixed">$3</span></td>
+                  <td style="font-size:0.72rem;">per <em>order</em> (flat)</td>
+                  <td><span class="p-fixed">$47</span></td>
+                  <td><span class="p-fixed">$179</span></td>
+                  <td style="text-align:center;"><span class="p-fixed">$0.75</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--totr);font-weight:600;">TOR</td>
+                  <td><span class="p-fixed">$47</span></td>
+                  <td><span class="p-fixed" style="color:var(--text-dim);">—</span></td>
+                  <td style="font-size:0.72rem;color:var(--text-dim);">embedded / variable</td>
+                  <td><span class="p-fixed">$47</span></td>
+                  <td><span class="p-fixed">$188</span></td>
+                  <td style="text-align:center;"><span class="p-fixed" style="color:var(--text-dim);">—</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:0.6rem 0.9rem 0.7rem;border-top:1px solid var(--border-subtle);display:flex;flex-wrap:wrap;gap:0.3rem 1.5rem;font-size:0.66rem;color:var(--text-dim);line-height:1.5;">
+            <span>ESB is highest all-in solo (+$7 vs. Edge).</span>
+            <span>Edge fee stacks to $8 at 4 tickets vs. ESB flat $5.</span>
+            <span>Fee unit changes competitive rank by party size.</span>
+            <span style="margin-left:auto;">Sources: attraction sites · Apr 10</span>
+          </div>
+        </div>
+      </details>
+
+      <div style="height:0.85rem;"></div>
+
+      <!-- ── Daily Brief panel ── -->
+      <details class="panel slim-panel fade-up" id="briefPanel" style="margin-bottom:0;">
+        <summary class="panel-header">
+          <div class="panel-title">
+            <span class="bar"></span>AI Market Brief
+            <span style="
+              display:inline-block;margin-left:0.45rem;
+              padding:0.15rem 0.45rem;
+              background:var(--gold-subtle);color:var(--gold);
+              border:1px solid var(--gold-border);border-radius:3px;
+              font-size:0.52rem;font-weight:700;letter-spacing:0.1em;
+              text-transform:uppercase;vertical-align:middle;
+            ">AI</span>
+          </div>
+          <span class="panel-meta" id="briefDate">Loading…</span>
+        </summary>
+
+        <!-- Loading state -->
+        <div id="briefLoading" style="padding:1.25rem 1.1rem;display:flex;align-items:center;gap:0.6rem;">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--gold);opacity:0.5;animation:pulse 1.4s infinite;"></div>
+          <span style="font-size:0.78rem;color:var(--text-dim);">Generating brief…</span>
+        </div>
+
+        <!-- Brief content -->
+        <div id="briefContent" style="display:none;">
+          <div style="padding:1rem 1.1rem 0.6rem;">
+            <div id="briefHeadline" style="
+              font-size:1rem;font-weight:700;
+              color:var(--text-primary);line-height:1.45;
+              margin-bottom:0.65rem;
+              padding-left:0.75rem;
+              border-left:3px solid var(--gold);
+            "></div>
+            <div id="briefBody" style="font-size:0.79rem;color:var(--text-secondary);line-height:1.65;"></div>
+          </div>
+          <div id="briefOpportunities" style="
+            display:flex;flex-direction:column;gap:0.4rem;
+            margin:0 1.1rem 1rem;
+          "></div>
+          <div style="
+            padding:0.5rem 1.1rem;
+            border-top:1px solid var(--border);
+            display:flex;align-items:center;justify-content:space-between;
+          ">
+            <span id="briefModel" style="font-size:0.6rem;color:var(--text-dim);font-family:var(--font-mono);"></span>
+            <span id="briefTs" style="font-size:0.6rem;color:var(--text-dim);"></span>
+          </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="briefError" style="display:none;padding:1.1rem;font-size:0.78rem;color:var(--text-dim);"></div>
+      </details>
+
+      <!-- ── Same-Day Time-of-Day Benchmark ── -->
+      <div class="section-rule" style="margin-top:1.1rem;">
+        <div class="section-rule-line"></div>
+        <span class="section-rule-label">Same-Day Time-of-Day Benchmark</span>
+        <div class="section-rule-line"></div>
+      </div>
+
+      <div class="tg-section fade-up">
+        <div class="tg-controls">
+          <div class="tg-control-group">
+            <label class="tg-control-label" for="tgDateSelect">Travel Date</label>
+            <select id="tgDateSelect" class="tg-select"></select>
+          </div>
+          <div class="tg-control-group">
+            <label class="tg-control-label" for="tgTimeSelect">Tour Time</label>
+            <select id="tgTimeSelect" class="tg-select tg-select-time"></select>
+          </div>
+          <button class="tg-add-btn" id="tgAddBtn">+ Add</button>
+          <div class="tg-controls-hint">
+            Pick a date and tour time, then click <strong>+ Add</strong> to build a multi-date comparison.
+          </div>
+        </div>
+
+        <div class="tg-panel" id="tgMatrixPanel">
+          <div class="tg-panel-head">
+            <div>
+              <div class="tg-panel-title" style="color:var(--text-primary);">
+                Time-Window Pricing Matrix
+              </div>
+              <div class="tg-panel-sub" id="tgMatrixSub">Loading…</div>
+            </div>
+            <div class="tg-matrix-delta-key" style="font-size:0.72rem;color:var(--text-dim);font-style:italic;">
+              Δ = ESB minus competitor
+            </div>
+          </div>
+          <div id="tgMatrixBody">
+            <div class="tg-matrix-loading">Loading pricing matrix…</div>
+          </div>
+        </div>
+
+        <div class="tg-panel tg-compare-panel" id="tgComparePanel" style="display:none;">
+          <div class="tg-panel-head">
+            <div>
+              <div class="tg-panel-title" style="color:var(--text-primary);">
+                Saved Comparisons
+              </div>
+              <div class="tg-panel-sub">Accumulated rows. Change the date, pick another tour time, and add more.</div>
+            </div>
+            <button class="tg-clear-btn" id="tgClearAll">Clear All</button>
+          </div>
+          <div id="tgCompareBody"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Floating chat widget injected by chat-widget.js (shared across pages) -->
+<script src="chat-widget.js" defer></script>
+
+<script>
+// ── Auth guard ────────────────────────────────────────────────
+if (sessionStorage.getItem('ps_auth') !== '1') {
+  location.replace('auth.html');
+}
+
+// ── Date display ─────────────────────────────────────────────
+(function () {
+  const now = new Date();
+  const fmt = now.toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  });
+  document.getElementById('topbarDate').textContent = fmt;
+  document.getElementById('sidebarTs').textContent = 'Last updated: ' + fmt;
+  document.getElementById('matrixDate').textContent = 'As of ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+})();
+
+// ── GA Floor Prices (live from prices_floor.json) ─────────────
+(function () {
+  const DATA = 'data/';
+  fetch(DATA + 'prices_floor.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(floor => {
+      if (!floor) return;
+      const fmt = c => c ? '$' + (c / 100).toFixed(2) : null;
+      const gaRow = document.querySelector('.matrix-table tbody tr:first-child');
+      if (!gaRow) return;
+      const cells = gaRow.querySelectorAll('td');
+      // cells[0]=label, [1]=ESB, [2]=Edge, [3]=Summit, [4]=TOR
+      const map = [null, 'esb', 'edge', 'summit', 'totr'];
+      map.forEach((vk, i) => {
+        if (!vk || !cells[i]) return;
+        const v = floor[vk];
+        if (!v) return;
+        const span = cells[i].querySelector('.p-gold, .p-dyn, .p-fixed');
+        if (span) span.textContent = 'from ' + fmt(v);
+      });
+    })
+    .catch(() => {});
+})();
+
+// ── Market Pulse (live from price_changes_recent.json) ────────
+(function () {
+  const DATA = 'data/';
+  const VENUE_NAMES = { esb: 'Empire State Building', edge: 'Edge', summit: 'Summit', totr: 'Top of the Rock' };
+  const VENUE_VAR   = { esb: 'var(--esb)', edge: 'var(--edge)', summit: 'var(--summit)', totr: 'var(--totr)' };
+  const VENUE_CLS   = { esb: 'esb', edge: 'edge', summit: 'summit', totr: 'totr' };
+
+  fetch(DATA + 'price_changes_recent.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(changes => {
+      const list = document.getElementById('pulseList');
+      const meta = document.getElementById('pulseMeta');
+      if (!changes || !changes.length) {
+        list.innerHTML = '<div style="padding:1rem;font-size:0.72rem;color:var(--text-dim);">No price changes detected.</div>';
+        meta.textContent = '0 moves';
+        return;
+      }
+
+      // All changes since scraper launched
+      const recent = changes;
+
+      // Group by venue — collect all changes, compute stats
+      const byVenue = {};
+      recent.forEach(c => {
+        const delta = c.new_price_cents - c.old_price_cents;
+        if (!byVenue[c.venue]) byVenue[c.venue] = [];
+        byVenue[c.venue].push({ ...c, delta });
+      });
+
+      // Sort each venue's changes by absolute delta descending
+      Object.values(byVenue).forEach(arr => arr.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)));
+
+      // Count total moves
+      const totalMoves = recent.length;
+      const affectedDates = new Set(recent.map(c => c.travel_date)).size;
+      const detectedDates = [...new Set(recent.map(c => (c.detected_at||'').slice(0,10)).filter(Boolean))].sort();
+      const dStart = detectedDates[0] ? new Date(detectedDates[0] + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+      const dEnd   = detectedDates.at(-1) ? new Date(detectedDates.at(-1) + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+      meta.textContent = totalMoves + ' change' + (totalMoves !== 1 ? 's' : '') + ' · ' + affectedDates + ' date' + (affectedDates !== 1 ? 's' : '') + ' · ' + dStart + '–' + dEnd;
+
+      const rows = [];
+      const fmt = c => '$' + (c / 100).toFixed(0);
+      const allVenues = ['esb', 'edge', 'summit', 'totr'];
+
+      allVenues.forEach((vk, idx) => {
+        const arr = byVenue[vk] || [];
+        const isLast = idx === allVenues.length - 1;
+        const pip = `<div class="venue-pip ${VENUE_CLS[vk]}"></div>`;
+        const pill = `<div class="venue-pill" style="color:${VENUE_VAR[vk]};">${pip}${VENUE_NAMES[vk]}</div>`;
+
+        if (!arr.length) {
+          rows.push(`
+            <div class="pulse-item">
+              <div class="pulse-indicator">
+                <div class="pulse-dot neutral"></div>
+                ${!isLast ? '<div class="pulse-line"></div>' : ''}
+              </div>
+              <div class="pulse-body">
+                <div class="pulse-header">${pill}</div>
+                <div class="pulse-desc">No price changes detected</div>
+                <div class="pulse-date">${dStart}–${dEnd}</div>
+              </div>
+              <div class="pulse-change none">—</div>
+            </div>`);
+          return;
+        }
+
+        // Stats for this venue
+        const ups = arr.filter(c => c.delta > 0);
+        const downs = arr.filter(c => c.delta < 0);
+        const travelDates = new Set(arr.map(c => c.travel_date)).size;
+        const netDir = ups.length > downs.length ? 'up' : downs.length > ups.length ? 'down' : 'neutral';
+
+        // Show the top change (largest absolute delta)
+        const top = arr[0];
+        const dir = top.delta > 0 ? 'up' : 'down';
+        const sign = top.delta > 0 ? '+' : '';
+        const pct = ((top.delta / top.old_price_cents) * 100).toFixed(1);
+        const desc = `Largest: ${fmt(top.old_price_cents)} → ${fmt(top.new_price_cents)} (${sign}${pct}%) on ${top.travel_date}`;
+        const summary = `${arr.length} total moves across ${travelDates} date${travelDates !== 1 ? 's' : ''}: ${ups.length} increase${ups.length !== 1 ? 's' : ''}, ${downs.length} decrease${downs.length !== 1 ? 's' : ''}`;
+        const changeLabel = sign + fmt(Math.abs(top.delta));
+
+        rows.push(`
+            <div class="pulse-item">
+              <div class="pulse-indicator">
+                <div class="pulse-dot ${netDir}"></div>
+                ${!isLast ? '<div class="pulse-line"></div>' : ''}
+              </div>
+              <div class="pulse-body">
+                <div class="pulse-header">${pill}</div>
+                <div class="pulse-desc">${desc}</div>
+                <div class="pulse-desc" style="color:var(--text-dim);font-size:0.68rem;margin-top:0.15rem;">${summary}</div>
+                <div class="pulse-date">${new Date((top.detected_at||'').replace(' ','T')).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+              </div>
+              <div class="pulse-change ${dir}">${changeLabel}</div>
+            </div>`);
+      });
+
+      // Add status changes summary (reopened / sold out)
+      const statusOnly = changes.filter(c => c.new_price_cents === c.old_price_cents && c.old_status !== c.new_status);
+      const recentStatus = statusOnly.filter(c => new Date(c.detected_at.replace(' ', 'T')) >= cutoff);
+      if (recentStatus.length) {
+        const reopened = recentStatus.filter(c => c.old_status === 'sold_out' && c.new_status === 'available');
+        const soldOut = recentStatus.filter(c => c.old_status === 'available' && c.new_status === 'sold_out');
+        let statusParts = [];
+        if (reopened.length) statusParts.push(`<span style="color:#34d399;">↑ ${reopened.length} reopened</span>`);
+        if (soldOut.length) statusParts.push(`<span style="color:#f87171;">↓ ${soldOut.length} sold out</span>`);
+        if (statusParts.length) {
+          rows.push(`
+            <div class="pulse-item" style="border-top:1px solid var(--border-subtle);margin-top:0.5rem;padding-top:0.65rem;">
+              <div class="pulse-indicator">
+                <div class="pulse-dot neutral" style="background:var(--text-dim);"></div>
+              </div>
+              <div class="pulse-body">
+                <div class="pulse-header" style="font-size:0.68rem;color:var(--text-secondary);font-weight:600;">Status Changes</div>
+                <div class="pulse-desc">${statusParts.join(' · ')}</div>
+                <div class="pulse-date">Tour times changed availability (no price move)</div>
+              </div>
+              <div class="pulse-change none" style="font-size:0.65rem;color:var(--text-dim);">${recentStatus.length}</div>
+            </div>`);
+        }
+      }
+
+      list.innerHTML = rows.join('');
+    })
+    .catch(err => {
+      document.getElementById('pulseList').innerHTML =
+        '<div style="padding:1rem;font-size:0.72rem;color:var(--text-dim);">Market pulse unavailable: ' + err.message + '</div>';
+    });
+})();
+
+// ── Daily Brief loader ────────────────────────────────────────
+(function () {
+  const DATA = 'data/';
+  fetch(DATA + 'daily_brief.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(brief => {
+      document.getElementById('briefLoading').style.display = 'none';
+      if (!brief || brief.error || !brief.headline) {
+        document.getElementById('briefError').style.display = '';
+        document.getElementById('briefError').textContent = 'Daily brief not yet generated.';
+        return;
+      }
+
+      // Headline
+      document.getElementById('briefHeadline').textContent = brief.headline;
+
+      // Body
+      document.getElementById('briefBody').textContent = brief.body;
+
+      // Opportunities
+      const opp = brief.opportunities || [];
+      const oppEl = document.getElementById('briefOpportunities');
+      opp.forEach(o => {
+        const div = document.createElement('div');
+        div.style.cssText = `
+          padding:0.55rem 0.75rem;
+          background:var(--gold-subtle);
+          border:1px solid var(--gold-border);
+          border-radius:var(--r);
+          font-size:0.74rem;
+          color:var(--text-secondary);
+          line-height:1.45;
+        `;
+        div.innerHTML = '<span style="color:var(--gold);font-weight:700;margin-right:0.4rem;">◆</span>' + o;
+        oppEl.appendChild(div);
+      });
+
+      // Meta
+      document.getElementById('briefDate').textContent = brief.date || '';
+      document.getElementById('briefModel').textContent = brief.model || '';
+      if (brief.generated_at) {
+        const d = new Date(brief.generated_at);
+        document.getElementById('briefTs').textContent = 'Generated ' + d.toLocaleString('en-US', {
+          month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZoneName:'short'
+        });
+      }
+
+      document.getElementById('briefContent').style.display = '';
+    })
+    .catch(err => {
+      document.getElementById('briefLoading').style.display = 'none';
+      document.getElementById('briefError').style.display = '';
+      document.getElementById('briefError').textContent = 'Brief unavailable: ' + err.message;
+    });
+})();
+
+// ── Chatbot: widget + logic live in chat-widget.js (shared across pages) ──
+
+// ── Coverage window + KPIs (dynamic from data) ───────────────
+(function () {
+  const DATA = 'data/';
+
+  // Coverage window from meta.json
+  fetch(DATA + 'meta.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(meta => {
+      if (!meta) return;
+      const keys = meta.venue_keys || [];
+      document.querySelector('.chip').innerHTML = '<span class="dot"></span>' + keys.length + ' Attractions Tracked';
+
+      const cov = meta.coverage || {};
+      const scrapeDates = Object.values(cov).map(c => c.scrape_date).filter(Boolean).sort();
+      const travelThroughs = Object.values(cov).map(c => c.travel_through).filter(Boolean).sort();
+      const lastScrape = scrapeDates.at(-1);
+      const maxThrough = travelThroughs.at(-1);
+
+      if (lastScrape) {
+        const _d = new Date(lastScrape + 'T12:00:00');
+        document.getElementById('sidebarTs').textContent = 'Last updated: ' + _d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      if (lastScrape && maxThrough) {
+        const today = new Date(lastScrape + 'T12:00:00');
+        const end   = new Date(maxThrough  + 'T12:00:00');
+        const days  = Math.round((end - today) / 86400000);
+        document.getElementById('kpi-window').textContent = days + 'd';
+
+        const fmtShort = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        document.getElementById('kpi-window-detail').textContent =
+          fmtShort(lastScrape) + ' → ' + fmtShort(maxThrough) + ' · ' + keys.length + ' attractions';
+
+        if (document.getElementById('introCoverage')) {
+          document.getElementById('introCoverage').textContent =
+            'Coverage: ' + fmtShort(lastScrape) + ' → ' + fmtShort(maxThrough) + ' (' + days + ' days)';
+        }
+      }
+
+      // Per-venue scrape dates for tooltip
+      const venueNames = meta.venues || {};
+      const covLines = Object.entries(cov).map(([vk, c]) =>
+        (venueNames[vk]?.name || vk) + ': thru ' + c.travel_through
+      ).join(' · ');
+      document.getElementById('kpi-window-detail').title = covLines;
+    })
+    .catch(() => {
+      document.getElementById('kpi-window').textContent = '265d';
+      document.getElementById('kpi-window-detail').textContent = 'Apr 10 → Jan 3, 2027 · 4 attractions';
+    });
+
+  // Price moves from price_changes.json
+  fetch(DATA + 'price_changes.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(changes => {
+      if (!changes || !changes.length) return;
+
+      // Find the latest detected_at date
+      const dates = changes
+        .map(c => (c.detected_at || '').slice(0, 10))
+        .filter(Boolean)
+        .sort();
+      const latestDate = dates.at(-1);
+
+      // Only actual price-level changes on that date (both prices non-null, values differ)
+      const moves = changes.filter(c =>
+        (c.detected_at || '').startsWith(latestDate) &&
+        c.old_price_cents != null &&
+        c.new_price_cents != null &&
+        c.old_price_cents !== c.new_price_cents
+      );
+
+      const byVenue = {};
+      moves.forEach(c => { byVenue[c.venue] = (byVenue[c.venue] || 0) + 1; });
+
+      document.getElementById('kpi-changes').textContent = moves.length;
+
+      const venueMap = { esb: 'ESB', edge: 'Edge', summit: 'Summit', totr: 'TOR' };
+      const parts = Object.entries(byVenue)
+        .sort((a,b) => b[1]-a[1])
+        .map(([vk, n]) => `<span class="delta ${n > 0 ? 'up' : 'none'}">${venueMap[vk]||vk} ↕${n}</span>`);
+
+      const dateLabel = new Date(latestDate + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric' });
+      document.getElementById('kpi-change-detail').innerHTML =
+        parts.join(' ') + `<span style="color:var(--text-dim);margin-left:0.3rem">· ${dateLabel}</span>`;
+    })
+    .catch(() => {
+      document.getElementById('kpi-changes').textContent = '—';
+      document.getElementById('kpi-change-detail').textContent = 'Data unavailable';
+    });
+
+  // Dynamic TOR floor from latest prices
+  fetch(DATA + 'prices_latest_totr.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(rows => {
+      if (!rows) return;
+      const today = new Date().toISOString().slice(0,10);
+      const todayPrices = rows
+        .filter(r => r.travel_date === today && r.price_cents != null)
+        .map(r => r.price_cents);
+      if (!todayPrices.length) return;
+      const floor = Math.min(...todayPrices);
+      const el = document.getElementById('pos-totr-price');
+      if (el) el.textContent = 'from $' + (floor / 100).toFixed(0);
+    })
+    .catch(() => {});
+})();
+
+// ── Theme toggle ──────────────────────────────────────────────
+(function () {
+  const DARK_ICON = '<path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.7a1 1 0 11-1.41-1.41l.7-.71zM18 9a1 1 0 110 2h-1a1 1 0 110-2h1zm-1.78 5.78a1 1 0 010 1.42l-.7.7a1 1 0 11-1.42-1.41l.71-.71a1 1 0 011.41 0zM11 16a1 1 0 11-2 0v-1a1 1 0 112 0v1zm-5.78-.78a1 1 0 01-1.41 0l-.71-.7a1 1 0 011.41-1.42l.71.71a1 1 0 010 1.41zM4 10a1 1 0 110-2H3a1 1 0 110 2h1zm1.22-6.22a1 1 0 010 1.41l-.71.71A1 1 0 013.1 4.49l.7-.71a1 1 0 011.42 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/>';
+  const LIGHT_ICON = '<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>';
+  const btn = document.getElementById('themeToggle');
+  const icon = document.getElementById('themeIcon');
+  const saved = localStorage.getItem('ps_theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    if (icon) icon.innerHTML = LIGHT_ICON;
+  }
+  if (btn) {
+    btn.addEventListener('click', function () {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('ps_theme', 'dark');
+        if (icon) icon.innerHTML = DARK_ICON;
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('ps_theme', 'light');
+        if (icon) icon.innerHTML = LIGHT_ICON;
+      }
+    });
+  }
+})();
+
+// ── Matrix tier-row expand/collapse ─────────────────────────
+(function () {
+  document.querySelectorAll('.matrix-table tr.tier-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Don't toggle when clicking a product link inside the row
+      if (e.target.closest('a')) return;
+      const tier = row.dataset.tier;
+      const detail = document.querySelector(
+        '.matrix-table tr.tier-detail-row[data-tier="' + tier + '"]'
+      );
+      row.classList.toggle('open');
+      if (detail) detail.classList.toggle('open');
+    });
+  });
+})();
+
+// ── Same-Day Time-of-Day Benchmark ────────────────────────────
+(function () {
+  const DATA = 'data/';
+  // Internal ESB tour_group keys are business logic only.
+  // We render public-friendly time-of-day labels — never raw keys.
+  const TG_ORDER = [
+    'Early Access', 'Opening', 'Pre-Sunset', 'Pre-Sunset 2',
+    'Sunset', 'Twilight', 'Post-Sunset 2', 'Post-Sunset', 'Last Hour'
+  ];
+  const TG_LABELS = {
+    'Early Access': 'Early Access',
+    'Opening':       'Morning',
+    'Pre-Sunset':    'Afternoon',
+    'Pre-Sunset 2':  'Late Afternoon',
+    'Sunset':        'Sunset',
+    'Twilight':      'Twilight',
+    'Post-Sunset 2': 'Evening',
+    'Post-Sunset':   'Late Evening',
+    'Last Hour':     'Last Hour',
+  };
+  const TG_SUNSET = new Set(['Sunset', 'Twilight']);
+
+  // Per-venue tour-time lookup, indexed by travel_date
+  // { vk: { travelDate: [{tour_time, price_cents, tour_group, raw_status, _mins}, ...] } }
+  const BY_DATE = { esb: {}, edge: {}, summit: {}, totr: {} };
+  let availableDates = [];
+
+  function fmtPrice(c) { return c == null ? '—' : '$' + Math.round(c / 100); }
+  function fmtDelta(a, b) {
+    if (a == null || b == null) return { cls: 'tg-zero', txt: '—' };
+    const d = a - b;
+    if (d === 0) return { cls: 'tg-zero', txt: '$0' };
+    if (d < 0)  return { cls: 'tg-neg', txt: '(' + fmtPrice(Math.abs(d)) + ')' };
+    return { cls: 'tg-pos', txt: fmtPrice(d) };
+  }
+  function weekdayName(iso) {
+    try {
+      return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+    } catch { return ''; }
+  }
+  function dayType(iso) {
+    const d = new Date(iso + 'T12:00:00').getDay();
+    return (d === 0 || d === 6) ? 'Weekend' : 'Weekday';
+  }
+  function timeToMin(t) {
+    const m = String(t || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!m) return null;
+    let h = parseInt(m[1], 10); const mn = parseInt(m[2], 10);
+    const ap = m[3].toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return h * 60 + mn;
+  }
+  function minsToLabel(mins) {
+    if (mins == null) return '';
+    let h = Math.floor(mins / 60), m = mins % 60;
+    const ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    return h + ':' + String(m).padStart(2, '0') + ' ' + ap;
+  }
+  function modeOf(arr) {
+    if (!arr.length) return null;
+    const freq = {};
+    arr.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+    return parseInt(Object.keys(freq).reduce((a, b) => freq[a] > freq[b] ? a : b), 10);
+  }
+
+  // Load all 4 venues in parallel, index by date
+  function loadData() {
+    const files = ['esb', 'edge', 'summit', 'totr'];
+    return Promise.all(files.map(vk =>
+      fetch(DATA + 'prices_latest_' + vk + '.json', { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : [])
+        .then(rows => {
+          (rows || []).forEach(r => {
+            if (!r.travel_date) return;
+            if (r.price_cents == null) return;
+            if (!BY_DATE[vk][r.travel_date]) BY_DATE[vk][r.travel_date] = [];
+            BY_DATE[vk][r.travel_date].push({
+              tour_time: r.tour_time,
+              price_cents: r.price_cents,
+              tour_group: r.tour_group,
+              raw_status: r.raw_status,
+              _mins: timeToMin(r.tour_time),
+            });
+          });
+        })
+        .catch(() => {})
+    ));
+  }
+
+  function populateDateSelect() {
+    availableDates = Object.keys(BY_DATE.esb).sort();
+    const sel = document.getElementById('tgDateSelect');
+    if (!availableDates.length) {
+      sel.innerHTML = '<option>No data</option>';
+      return;
+    }
+    // Default to today if present, else first available
+    const today = new Date().toISOString().slice(0, 10);
+    const defaultDate = availableDates.includes(today) ? today : availableDates[0];
+    sel.innerHTML = availableDates.map(d => {
+      const sel_attr = d === defaultDate ? ' selected' : '';
+      return '<option value="' + d + '"' + sel_attr + '>' + d + '</option>';
+    }).join('');
+  }
+
+  // Group ESB rows by tour_group for a given date; compute mode price + time range.
+  function groupEsbByDate(dateIso) {
+    const rows = (BY_DATE.esb[dateIso] || [])
+      .filter(r => r.raw_status !== 'sold_out' && r._mins != null);
+    if (!rows.length) return [];
+    const info = {};
+    rows.forEach(r => {
+      const g = r.tour_group || 'Other';
+      if (!info[g]) info[g] = { prices: [], mins: [] };
+      info[g].prices.push(r.price_cents);
+      info[g].mins.push(r._mins);
+    });
+    return TG_ORDER
+      .filter(g => info[g])
+      .map(g => {
+        const i = info[g];
+        const startMin = Math.min(...i.mins);
+        const endMin   = Math.max(...i.mins);
+        return {
+          key: g,
+          label: TG_LABELS[g] || g,
+          price_cents: modeOf(i.prices),
+          startMin, endMin,
+          is_sunset: TG_SUNSET.has(g),
+        };
+      });
+  }
+
+  // For a given time window, find the lowest competitor price within that window.
+  function competitorLowInWindow(vk, dateIso, startMin, endMin) {
+    const rows = (BY_DATE[vk][dateIso] || [])
+      .filter(r => r.raw_status !== 'sold_out' && r._mins != null);
+    const inWin = rows
+      .filter(r => r._mins >= startMin && r._mins <= endMin)
+      .map(r => r.price_cents);
+    return inWin.length ? Math.min(...inWin) : null;
+  }
+
+  // Peak competitor price in the sunset window (4 PM – 9 PM)
+  function competitorSunsetPeak(vk, dateIso) {
+    const rows = (BY_DATE[vk][dateIso] || [])
+      .filter(r => r.raw_status !== 'sold_out' && r._mins != null && r.price_cents != null)
+      .filter(r => r._mins >= 960 && r._mins <= 1260);
+    if (!rows.length) return null;
+    return Math.max(...rows.map(r => r.price_cents));
+  }
+
+  // ── Saved comparison state ──
+  const savedRows = [];
+
+  // Populate tour time dropdown for the selected date
+  function populateTimeSelect(dateIso) {
+    const sel = document.getElementById('tgTimeSelect');
+    const rows = (BY_DATE.esb[dateIso] || [])
+      .filter(r => r.raw_status !== 'sold_out' && r._mins != null && r.price_cents != null)
+      .sort((a, b) => a._mins - b._mins);
+    const seen = new Set();
+    const unique = rows.filter(r => {
+      if (seen.has(r.tour_time)) return false;
+      seen.add(r.tour_time);
+      return true;
+    });
+    if (!unique.length) {
+      sel.innerHTML = '<option value="">No tour times available</option>';
+      return;
+    }
+    sel.innerHTML = unique.map((r, i) =>
+      '<option value="' + r._mins + '"' +
+        ' data-price="' + r.price_cents + '"' +
+        ' data-tg="' + (r.tour_group || '') + '"' +
+        (i === 0 ? ' selected' : '') + '>' +
+        r.tour_time + '  \u2014  ' + fmtPrice(r.price_cents) +
+      '</option>'
+    ).join('');
+  }
+
+  // Lowest competitor price within ±30 min of target
+  function competitorNearTime(vk, dateIso, targetMin) {
+    const rows = (BY_DATE[vk][dateIso] || [])
+      .filter(r => r.raw_status !== 'sold_out' && r._mins != null && r.price_cents != null);
+    const nearby = rows.filter(r => Math.abs(r._mins - targetMin) <= 30);
+    if (!nearby.length) return null;
+    return Math.min(...nearby.map(r => r.price_cents));
+  }
+
+  function renderMatrix(dateIso, groups) {
+    const sub = document.getElementById('tgMatrixSub');
+    sub.textContent = dateIso + ' (' + weekdayName(dateIso) + ') · ' + dayType(dateIso) +
+      ' · same-day group window comparison';
+    const body = document.getElementById('tgMatrixBody');
+    if (!groups.length) {
+      body.innerHTML = '<div class="tg-matrix-empty">No ESB data for ' + dateIso + '</div>';
+      return;
+    }
+
+    // Selected tour time row
+    const timeSel = document.getElementById('tgTimeSelect');
+    const opt = timeSel && timeSel.selectedOptions[0];
+    let selectedRow = '';
+    if (opt && opt.value) {
+      const targetMin = parseInt(opt.value, 10);
+      const esbP = parseInt(opt.getAttribute('data-price'), 10);
+      const timeLabel = opt.textContent.split('\u2014')[0].trim();
+      const edgeP = competitorNearTime('edge',   dateIso, targetMin);
+      const sumP  = competitorNearTime('summit', dateIso, targetMin);
+      const torP  = competitorNearTime('totr',   dateIso, targetMin);
+      const dE = fmtDelta(esbP, edgeP);
+      const dS = fmtDelta(esbP, sumP);
+      const dT = fmtDelta(esbP, torP);
+      selectedRow = '<tr class="tg-selected-time">' +
+        '<td class="tg-row-label">' + timeLabel + '<span class="tg-selected-badge">selected</span></td>' +
+        '<td class="tg-esb-cell">' + fmtPrice(esbP) + '</td>' +
+        '<td class="' + (edgeP == null ? 'tg-empty' : '') + '">' + fmtPrice(edgeP) + '</td>' +
+        '<td class="tg-delta ' + dE.cls + '">' + dE.txt + '</td>' +
+        '<td class="' + (sumP  == null ? 'tg-empty' : '') + '">' + fmtPrice(sumP)  + '</td>' +
+        '<td class="tg-delta ' + dS.cls + '">' + dS.txt + '</td>' +
+        '<td class="' + (torP  == null ? 'tg-empty' : '') + '">' + fmtPrice(torP)  + '</td>' +
+        '<td class="tg-delta ' + dT.cls + '">' + dT.txt + '</td>' +
+      '</tr>';
+    }
+
+    const rows = groups
+      .filter(g => g.key !== 'Early Access')
+      .map(g => {
+        const esbP = g.price_cents;
+        const edgeP = competitorLowInWindow('edge',   dateIso, g.startMin, g.endMin);
+        const sumP  = competitorLowInWindow('summit', dateIso, g.startMin, g.endMin);
+        const torP  = competitorLowInWindow('totr',   dateIso, g.startMin, g.endMin);
+        const dE = fmtDelta(esbP, edgeP);
+        const dS = fmtDelta(esbP, sumP);
+        const dT = fmtDelta(esbP, torP);
+        return '<tr class="' + (g.is_sunset ? 'is-sunset' : '') + '">' +
+          '<td class="tg-row-label">' + g.label + '</td>' +
+          '<td class="tg-esb-cell">' + fmtPrice(esbP) + '</td>' +
+          '<td class="' + (edgeP == null ? 'tg-empty' : '') + '">' + fmtPrice(edgeP) + '</td>' +
+          '<td class="tg-delta ' + dE.cls + '">' + dE.txt + '</td>' +
+          '<td class="' + (sumP  == null ? 'tg-empty' : '') + '">' + fmtPrice(sumP)  + '</td>' +
+          '<td class="tg-delta ' + dS.cls + '">' + dS.txt + '</td>' +
+          '<td class="' + (torP  == null ? 'tg-empty' : '') + '">' + fmtPrice(torP)  + '</td>' +
+          '<td class="tg-delta ' + dT.cls + '">' + dT.txt + '</td>' +
+        '</tr>';
+      }).join('');
+    body.innerHTML =
+      '<table class="tg-matrix">' +
+        '<thead><tr>' +
+          '<th>Time Window</th>' +
+          '<th>ESB</th>' +
+          '<th>Edge</th>' +
+          '<th>Δ Edge</th>' +
+          '<th>Summit</th>' +
+          '<th>Δ Summit</th>' +
+          '<th>TOTR</th>' +
+          '<th>Δ TOTR</th>' +
+        '</tr></thead>' +
+        '<tbody>' + selectedRow + rows + '</tbody>' +
+      '</table>';
+  }
+
+  // ── Comparison builder ──
+  function addFromSelector() {
+    const dateIso = document.getElementById('tgDateSelect').value;
+    const timeSel = document.getElementById('tgTimeSelect');
+    const opt = timeSel.selectedOptions[0];
+    if (!dateIso || !opt || !opt.value) return;
+    const targetMin = parseInt(opt.value, 10);
+    if (isNaN(targetMin)) return;
+    const esbP = parseInt(opt.getAttribute('data-price'), 10);
+    const tg = opt.getAttribute('data-tg') || '';
+    const timeLabel = opt.textContent.split('\u2014')[0].trim();
+
+    // Deduplicate by date + minute
+    if (savedRows.find(r => r.dateIso === dateIso && r.targetMin === targetMin)) return;
+
+    savedRows.push({
+      dateIso, targetMin, label: timeLabel,
+      is_sunset: TG_SUNSET.has(tg),
+      esbP,
+      edgeP: competitorNearTime('edge',   dateIso, targetMin),
+      sumP:  competitorNearTime('summit', dateIso, targetMin),
+      torP:  competitorNearTime('totr',   dateIso, targetMin),
+    });
+    renderComparisonTable();
+  }
+
+  function removeComparison(idx) {
+    savedRows.splice(idx, 1);
+    renderComparisonTable();
+  }
+
+  function clearComparisons() {
+    savedRows.length = 0;
+    renderComparisonTable();
+  }
+
+  function renderComparisonTable() {
+    const panel = document.getElementById('tgComparePanel');
+    const body = document.getElementById('tgCompareBody');
+    if (!savedRows.length) {
+      panel.style.display = 'none';
+      body.innerHTML = '';
+      return;
+    }
+    panel.style.display = '';
+    const rows = savedRows.map((r, i) => {
+      const dE = fmtDelta(r.esbP, r.edgeP);
+      const dS = fmtDelta(r.esbP, r.sumP);
+      const dT = fmtDelta(r.esbP, r.torP);
+      return '<tr class="' + (r.is_sunset ? 'is-sunset' : '') + '">' +
+        '<td class="tg-row-date">' + r.dateIso + '</td>' +
+        '<td class="tg-row-label">' + r.label + '</td>' +
+        '<td class="tg-esb-cell">' + fmtPrice(r.esbP) + '</td>' +
+        '<td class="' + (r.edgeP == null ? 'tg-empty' : '') + '">' + fmtPrice(r.edgeP) + '</td>' +
+        '<td class="tg-delta ' + dE.cls + '">' + dE.txt + '</td>' +
+        '<td class="' + (r.sumP  == null ? 'tg-empty' : '') + '">' + fmtPrice(r.sumP)  + '</td>' +
+        '<td class="tg-delta ' + dS.cls + '">' + dS.txt + '</td>' +
+        '<td class="' + (r.torP  == null ? 'tg-empty' : '') + '">' + fmtPrice(r.torP)  + '</td>' +
+        '<td class="tg-delta ' + dT.cls + '">' + dT.txt + '</td>' +
+        '<td><button class="tg-remove-btn" data-idx="' + i + '" title="Remove">×</button></td>' +
+      '</tr>';
+    }).join('');
+    body.innerHTML =
+      '<table class="tg-compare-table">' +
+        '<thead><tr>' +
+          '<th>Date</th>' +
+          '<th>Tour Time</th>' +
+          '<th>ESB</th>' +
+          '<th>Edge</th>' +
+          '<th>Δ Edge</th>' +
+          '<th>Summit</th>' +
+          '<th>Δ Summit</th>' +
+          '<th>TOTR</th>' +
+          '<th>Δ TOTR</th>' +
+          '<th></th>' +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>';
+    body.querySelectorAll('.tg-remove-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        removeComparison(parseInt(this.getAttribute('data-idx'), 10));
+      });
+    });
+  }
+
+  function render() {
+    const dateIso = document.getElementById('tgDateSelect').value;
+    if (!dateIso) return;
+    populateTimeSelect(dateIso);
+    const groups = groupEsbByDate(dateIso);
+    renderMatrix(dateIso, groups);
+  }
+
+  // Pre-populate with case-study sunset comparison dates
+  const SUNSET_DEFAULTS = [
+    '2026-04-11', '2026-05-23', '2026-07-03',
+    '2026-07-18', '2026-08-15', '2026-09-19'
+  ];
+  function loadSunsetDefaults() {
+    SUNSET_DEFAULTS.forEach(dateIso => {
+      // ESB sunset peak = highest price in Sunset/Twilight groups
+      const esbRows = (BY_DATE.esb[dateIso] || [])
+        .filter(r => r.raw_status !== 'sold_out' && r._mins != null
+          && r.price_cents != null && TG_SUNSET.has(r.tour_group));
+      if (!esbRows.length) return;
+      esbRows.sort((a, b) => b.price_cents - a.price_cents);
+      const peak = esbRows[0];
+      savedRows.push({
+        dateIso,
+        targetMin: peak._mins,
+        label: peak.tour_time,
+        is_sunset: true,
+        esbP:  peak.price_cents,
+        edgeP: competitorSunsetPeak('edge',   dateIso),
+        sumP:  competitorSunsetPeak('summit', dateIso),
+        torP:  competitorSunsetPeak('totr',   dateIso),
+      });
+    });
+    renderComparisonTable();
+  }
+
+  // Init
+  loadData().then(() => {
+    populateDateSelect();
+    document.getElementById('tgDateSelect').addEventListener('change', render);
+    document.getElementById('tgTimeSelect').addEventListener('change', function () {
+      const dateIso = document.getElementById('tgDateSelect').value;
+      if (dateIso) renderMatrix(dateIso, groupEsbByDate(dateIso));
+    });
+    document.getElementById('tgAddBtn').addEventListener('click', addFromSelector);
+    document.getElementById('tgClearAll').addEventListener('click', clearComparisons);
+    render();
+    loadSunsetDefaults();
+  }).catch(err => {
+    document.getElementById('tgMatrixBody').innerHTML =
+      '<div class="tg-matrix-empty">Data load failed.</div>';
+  });
+})();
+</script>
+</body>
+</html>

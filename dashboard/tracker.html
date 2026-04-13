@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence — Price Tracker</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="stylesheet" href="style.css">
+<style>
+.tracker-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.tracker-controls label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+.tracker-controls input[type="date"],
+.tracker-controls select {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  padding: 0.36rem 0.6rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.tracker-controls input[type="date"]:focus,
+.tracker-controls select:focus {
+  border-color: var(--gold-border);
+}
+.ctrl-btn {
+  padding: 0.44rem 0.9rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--gold-border);
+  background: var(--gold-subtle);
+  color: var(--gold);
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.03em;
+  align-self: flex-end;
+}
+.ctrl-btn:hover { background: var(--gold-muted); }
+.ctrl-btn.ghost {
+  background: transparent;
+  border-color: var(--border-md);
+  color: var(--text-secondary);
+}
+.ctrl-btn.ghost:hover { background: rgba(255,255,255,0.04); }
+
+/* Coverage pills */
+.cov-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+.cov-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.65rem 0.28rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+.cov-pill-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cov-pill strong { color: var(--text-primary); }
+
+/* ── DATE CARD LAYOUT ──────────────────────────────────────── */
+.date-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.date-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.date-card:hover { border-color: rgba(201,168,76,0.3); }
+.date-card.open  { border-color: var(--gold-border); }
+
+.date-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.date-card-toggle {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  transition: transform 0.18s, color 0.15s;
+}
+.date-card.open .date-card-toggle { transform: rotate(90deg); color: var(--gold); }
+.date-card-toggle svg { width: 14px; height: 14px; }
+
+.dc-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 130px;
+}
+.dc-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.dc-dow {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.dc-tags { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px; }
+.t-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.t-tag.peak { background: var(--amber-bg); color: var(--amber); }
+.t-tag.hol  { background: rgba(184,159,208,0.12); color: var(--summit); }
+
+.dc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.dc-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.dc-chip.esb    { background: rgba(212,168,67,0.12);  color: var(--esb);    border: 1px solid rgba(212,168,67,0.3);  }
+.dc-chip.edge   { background: rgba(120,184,216,0.1);  color: var(--edge);   border: 1px solid rgba(120,184,216,0.25); }
+.dc-chip.summit { background: rgba(184,159,208,0.1);  color: var(--summit); border: 1px solid rgba(184,159,208,0.25); }
+.dc-chip.totr   { background: rgba(92,189,150,0.1);   color: var(--totr);   border: 1px solid rgba(92,189,150,0.25);  }
+.dc-chip.na     { background: rgba(255,255,255,0.03); color: var(--text-dim); border: 1px solid var(--border); }
+
+.dc-range {
+  margin-left: auto;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.date-card-body {
+  display: none;
+  padding: 0 16px 16px;
+}
+.date-card.open .date-card-body { display: block; }
+
+/* ── ALIGNED PRICE MATRIX (time rows × venue cols) ─────────── */
+.matrix-wrap {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.matrix-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.matrix-header-bar .mhb-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.matrix-header-bar .mhb-astro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.28);
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.matrix-scroll { overflow-x: auto; }
+.price-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  /* fixed layout: time-col locks to 118px, the 4 venue cols split the
+     remaining space equally so columns never drift with content */
+  table-layout: fixed;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  min-width: 560px;
+}
+.price-matrix thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  z-index: 2;
+}
+.price-matrix thead th.time-col {
+  color: var(--text-dim);
+  width: 118px;
+}
+.price-matrix thead th.venue-col {
+  text-align: center;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+}
+.price-matrix thead th.venue-col .venue-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.price-matrix tbody td {
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  font-variant-numeric: tabular-nums;
+}
+.price-matrix td.time-cell {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.price-matrix td.price-cell {
+  text-align: center;
+  border-left: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+.price-matrix td.price-cell.empty {
+  color: var(--text-dim);
+  font-weight: 400;
+  opacity: 0.4;
+}
+.price-matrix td.price-cell.sold {
+  color: var(--text-dim);
+  text-decoration: line-through;
+  opacity: 0.45;
+  font-weight: 400;
+}
+.price-matrix td.price-cell.is-low {
+  color: var(--price-low);  /* day low */
+}
+/* Per-row high/low tints — highest cell across venues for a given
+   tour time gets a blush pink wash; lowest gets a very light pastel
+   green wash. Row-level (horizontal) comparison — distinct from the
+   column-level .is-low text-color which marks each venue's own day low. */
+.price-matrix td.price-cell.row-high {
+  background: rgba(255, 182, 193, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 182, 193, 0.38);
+}
+.price-matrix td.price-cell.row-low {
+  background: rgba(187, 247, 208, 0.20);
+  box-shadow: inset 0 0 0 1px rgba(187, 247, 208, 0.36);
+}
+/* Sunset accent wins over low when a cell is both */
+.price-matrix td.price-cell.is-sunset-price,
+.price-matrix td.price-cell.is-sunset-price.is-low {
+  color: var(--sunset-hot);  /* sunset product */
+}
+.price-matrix td.price-cell .delta-chip {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--sunset-hot);
+  background: var(--sunset-hot-bg);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+/* Section headers within table */
+.price-matrix tr.section-header td {
+  background: var(--bg-card);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 7px 12px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+/* Sunset divider row — the big orange marker */
+.price-matrix tr.sunset-divider td {
+  background: linear-gradient(90deg, var(--sunset-hot-glow), var(--sunset-hot-soft) 70%);
+  color: var(--sunset-hot);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  border-top: 1px solid var(--sunset-hot-line);
+  border-bottom: 1px solid var(--sunset-hot-line);
+}
+.price-matrix tr.sunset-divider td .sun-icon {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+/* Sunset window rows — no row tint; divider line above marks the window */
+.price-matrix tr.is-sunset td {
+  background: transparent;
+}
+.price-matrix tr.is-sunset td.time-cell {
+  color: var(--text-secondary);
+}
+.price-matrix tbody tr:not(.section-header):not(.sunset-divider):hover td {
+  background: rgba(255,255,255,0.025);
+}
+
+/* Legend under matrix */
+.matrix-legend {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+/* Top instance of legend sits above the matrix table — flip border + remove
+   the redundant astronomical sunset item (already shown in matrix-header-bar). */
+.matrix-legend.matrix-legend-top {
+  border-top: none;
+  border-bottom: 1px solid var(--border);
+}
+.matrix-legend.matrix-legend-top .legend-item:last-child {
+  display: none;
+}
+.matrix-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.matrix-legend .legend-swatch {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.matrix-legend .legend-swatch.sunset {
+  background: var(--sunset-hot-glow);
+  border-color: var(--sunset-hot-line);
+}
+.matrix-legend .legend-swatch.row-low  { background: rgba(187, 247, 208, 0.32); border-color: rgba(187, 247, 208, 0.60); }
+.matrix-legend .legend-swatch.row-high { background: rgba(255, 182, 193, 0.34); border-color: rgba(255, 182, 193, 0.60); }
+/* Text-color indicators — mimic the real cell by showing a sample price
+   in the same color the live cell would use. Keeps the legend honest. */
+.matrix-legend .legend-num {
+  display: inline-block;
+  min-width: 34px;
+  text-align: center;
+  font-family: var(--font-mono, 'DM Mono', ui-monospace, monospace);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.matrix-legend .legend-num.sunset { color: var(--sunset-hot); }
+.matrix-legend .legend-num.low    { color: var(--price-low); }
+
+/* Light theme — boost contrast on swatches against cream background */
+[data-theme="light"] .matrix-legend {
+  color: var(--text-primary);
+}
+[data-theme="light"] .matrix-legend .legend-swatch {
+  border-color: rgba(42,30,18,0.28);
+}
+[data-theme="light"] .matrix-legend .legend-swatch.row-low  {
+  background: rgba(34,197,94,0.18);
+  border-color: rgba(34,197,94,0.55);
+}
+[data-theme="light"] .matrix-legend .legend-swatch.row-high {
+  background: rgba(239,68,68,0.18);
+  border-color: rgba(239,68,68,0.55);
+}
+
+/* Loading */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+@media (max-width: 768px) {
+  .dc-meta-row { display: none; }
+  .price-matrix { font-size: 0.74rem; }
+  .price-matrix thead th.time-col { width: 88px; }
+  .price-matrix td.time-cell { font-size: 0.68rem; }
+  .matrix-legend { font-size: 0.74rem; gap: 14px; padding: 11px 13px; }
+  .matrix-legend .legend-swatch { width: 14px; height: 14px; }
+  .matrix-legend .legend-num { font-size: 0.82rem; min-width: 30px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap" aria-hidden="true">
+          <div class="brand-diamond"></div>
+          <div class="brand-rule"></div>
+        </div>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <div class="sidebar-sub">Price Intelligence</div>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+        <a href="index.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+          Executive Overview
+        </a>
+        <a href="tracker.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="2" width="14" height="13" rx="1.5"/>
+            <line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+          </svg>
+          Price Tracker
+        </a>
+        <a href="sunset.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v1.5"/><path d="M12.24 4.76l-1.06 1.06"/>
+            <path d="M3.76 4.76l1.06 1.06"/><path d="M3 10h10"/><path d="M5 13h6"/>
+            <path d="M4.5 10A3.5 3.5 0 0 1 11.5 10"/><path d="M1 10h2M13 10h2"/>
+          </svg>
+          Sunset Analysis
+        </a>
+        <a href="trends.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 11 5 7 9 9 15 3"/>
+            <line x1="1" y1="15" x2="15" y2="15"/>
+          </svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 1H3a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 3 15h10a1.5 1.5 0 0 0 1.5-1.5V7L9 1z"/>
+            <polyline points="9 1 9 7 14.5 7"/>
+            <line x1="5" y1="10" x2="11" y2="10"/><line x1="5" y1="12.5" x2="8.5" y2="12.5"/>
+          </svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <div class="status-dot live" id="statusDot"></div>
+        <span class="status-label" id="statusLabel">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="sidebarTs">Last updated: —</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Price Tracker</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate">—</span>
+        <span class="chip live"><span class="dot"></span><span id="totalDates">—</span> Dates</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Controls -->
+      <div class="tracker-controls">
+        <label>From
+          <input type="date" id="fromDate">
+        </label>
+        <label>To
+          <input type="date" id="toDate">
+        </label>
+        <label>Interval
+          <select id="intervalSelect" onchange="reRenderOpen()">
+            <option value="0">All times</option>
+            <option value="15" selected>15-min intervals</option>
+            <option value="30">30-min intervals</option>
+            <option value="60">Hourly</option>
+          </select>
+        </label>
+        <button class="ctrl-btn" onclick="applyRange()">Apply Filter</button>
+        <button class="ctrl-btn ghost" onclick="resetRange()">Reset</button>
+      </div>
+
+      <!-- Coverage pills -->
+      <div class="cov-row" id="covRow"></div>
+
+      <!-- Cards -->
+      <div id="cardsWrap">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          Loading…
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ── Auth guard ────────────────────────────────────────────────
+if (sessionStorage.getItem('ps_auth') !== '1') location.replace('auth.html');
+
+// ── Date display ─────────────────────────────────────────────
+const now = new Date();
+document.getElementById('topbarDate').textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+
+// ── Globals ──────────────────────────────────────────────────
+let META, LATEST, LATEST_IDX, FILTERED_ROWS = [];
+let SORT = { col: 'date', dir: 1 };
+const VENUE_CSS = { esb:'--esb', edge:'--edge', summit:'--summit', totr:'--totr' };
+// Internal business-logic keys — never render these labels in UI
+const ESB_SUNSET_GROUPS = new Set(['Sunset', 'Twilight']);
+
+// Threshold-based sunset detection. Finds the longest contiguous run of
+// afternoon (15:00–22:00) tour times priced at or above the day's "elevated"
+// threshold = floor + max($5, 50% of the floor→peak span). Catches full
+// ramps (Edge, TOR) rather than just the peak cluster, while keeping cliff-
+// priced venues (Summit) cleanly scoped to the elevated band. Returns
+// [startMin, endMin] or null when the afternoon is flat.
+function detectSunsetRange(pricesByTime) {
+  const afternoon = pricesByTime
+    .filter(([m, p]) => m >= 900 && m <= 1320 && p != null)
+    .sort((a, b) => a[0] - b[0]);
+  if (!afternoon.length) return null;
+  const prices = afternoon.map(([, p]) => p);
+  const floor = Math.min(...prices);
+  const peak  = Math.max(...prices);
+  if (peak === floor) return null;
+  const threshold = Math.max(floor + 500, floor + Math.round((peak - floor) * 0.5));
+  let bestStart = null, bestEnd = null, bestLen = 0;
+  let curStart = null, curEnd = null, curLen = 0;
+  for (const [m, p] of afternoon) {
+    if (p >= threshold) {
+      if (curStart == null) curStart = m;
+      curEnd = m; curLen++;
+    } else if (curStart != null) {
+      if (curLen > bestLen) { bestStart = curStart; bestEnd = curEnd; bestLen = curLen; }
+      curStart = curEnd = null; curLen = 0;
+    }
+  }
+  if (curStart != null && curLen > bestLen) { bestStart = curStart; bestEnd = curEnd; }
+  return bestStart == null ? null : [bestStart, bestEnd];
+}
+
+function timeToMin(t) {
+  const m = (t||'').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return 0;
+  let h = parseInt(m[1]); const mn = parseInt(m[2]); const ap = m[3].toUpperCase();
+  if (ap==='PM'&&h!==12) h+=12; if (ap==='AM'&&h===12) h=0;
+  return h*60+mn;
+}
+function minsToLabel(t) {
+  let h = Math.floor(t / 60), mn = t % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  if (h === 0) h = 12; else if (h > 12) h -= 12;
+  return h + ':' + String(mn).padStart(2, '0') + ' ' + ap;
+}
+// Astronomical sunset lookup — ESB coordinates 40.748567, -73.985537
+// Pre-computed via astral library (same algorithm as NOAA Solar Calculator)
+// matching the Master Calendar table used for internal tour group scheduling.
+// [minutes-since-midnight, label]
+const SUNSET_TABLE = {
+  "2026-04-11":[1171,"7:31 PM"],
+  "2026-04-12":[1172,"7:32 PM"],
+  "2026-04-13":[1173,"7:33 PM"],
+  "2026-04-14":[1174,"7:34 PM"],
+  "2026-04-15":[1175,"7:35 PM"],
+  "2026-04-16":[1176,"7:36 PM"],
+  "2026-04-17":[1177,"7:37 PM"],
+  "2026-04-18":[1178,"7:38 PM"],
+  "2026-04-19":[1179,"7:39 PM"],
+  "2026-04-20":[1180,"7:40 PM"],
+  "2026-04-21":[1182,"7:41 PM"],
+  "2026-04-22":[1183,"7:42 PM"],
+  "2026-04-23":[1184,"7:43 PM"],
+  "2026-04-24":[1185,"7:44 PM"],
+  "2026-04-25":[1186,"7:45 PM"],
+  "2026-04-26":[1187,"7:46 PM"],
+  "2026-04-27":[1188,"7:47 PM"],
+  "2026-04-28":[1189,"7:48 PM"],
+  "2026-04-29":[1190,"7:49 PM"],
+  "2026-04-30":[1191,"7:51 PM"],
+  "2026-05-01":[1192,"7:52 PM"],
+  "2026-05-02":[1193,"7:53 PM"],
+  "2026-05-03":[1194,"7:54 PM"],
+  "2026-05-04":[1195,"7:55 PM"],
+  "2026-05-05":[1196,"7:56 PM"],
+  "2026-05-06":[1197,"7:57 PM"],
+  "2026-05-07":[1198,"7:58 PM"],
+  "2026-05-08":[1199,"7:59 PM"],
+  "2026-05-09":[1200,"8:00 PM"],
+  "2026-05-10":[1201,"8:01 PM"],
+  "2026-05-11":[1202,"8:02 PM"],
+  "2026-05-12":[1203,"8:03 PM"],
+  "2026-05-13":[1204,"8:04 PM"],
+  "2026-05-14":[1205,"8:05 PM"],
+  "2026-05-15":[1206,"8:06 PM"],
+  "2026-05-16":[1207,"8:07 PM"],
+  "2026-05-17":[1208,"8:08 PM"],
+  "2026-05-18":[1209,"8:09 PM"],
+  "2026-05-19":[1210,"8:10 PM"],
+  "2026-05-20":[1211,"8:10 PM"],
+  "2026-05-21":[1212,"8:11 PM"],
+  "2026-05-22":[1213,"8:12 PM"],
+  "2026-05-23":[1214,"8:13 PM"],
+  "2026-05-24":[1214,"8:14 PM"],
+  "2026-05-25":[1215,"8:15 PM"],
+  "2026-05-26":[1216,"8:16 PM"],
+  "2026-05-27":[1217,"8:17 PM"],
+  "2026-05-28":[1218,"8:17 PM"],
+  "2026-05-29":[1219,"8:18 PM"],
+  "2026-05-30":[1219,"8:19 PM"],
+  "2026-05-31":[1220,"8:20 PM"],
+  "2026-06-01":[1221,"8:20 PM"],
+  "2026-06-02":[1222,"8:21 PM"],
+  "2026-06-03":[1222,"8:22 PM"],
+  "2026-06-04":[1223,"8:22 PM"],
+  "2026-06-05":[1224,"8:23 PM"],
+  "2026-06-06":[1224,"8:24 PM"],
+  "2026-06-07":[1225,"8:24 PM"],
+  "2026-06-08":[1225,"8:25 PM"],
+  "2026-06-09":[1226,"8:26 PM"],
+  "2026-06-10":[1227,"8:26 PM"],
+  "2026-06-11":[1227,"8:27 PM"],
+  "2026-06-12":[1228,"8:27 PM"],
+  "2026-06-13":[1228,"8:27 PM"],
+  "2026-06-14":[1228,"8:28 PM"],
+  "2026-06-15":[1229,"8:28 PM"],
+  "2026-06-16":[1229,"8:29 PM"],
+  "2026-06-17":[1229,"8:29 PM"],
+  "2026-06-18":[1230,"8:29 PM"],
+  "2026-06-19":[1230,"8:30 PM"],
+  "2026-06-20":[1230,"8:30 PM"],
+  "2026-06-21":[1231,"8:30 PM"],
+  "2026-06-22":[1231,"8:30 PM"],
+  "2026-06-23":[1231,"8:30 PM"],
+  "2026-06-24":[1231,"8:30 PM"],
+  "2026-06-25":[1231,"8:31 PM"],
+  "2026-06-26":[1231,"8:31 PM"],
+  "2026-06-27":[1231,"8:31 PM"],
+  "2026-06-28":[1231,"8:31 PM"],
+  "2026-06-29":[1231,"8:31 PM"],
+  "2026-06-30":[1231,"8:30 PM"],
+  "2026-07-01":[1231,"8:30 PM"],
+  "2026-07-02":[1231,"8:30 PM"],
+  "2026-07-03":[1230,"8:30 PM"],
+  "2026-07-04":[1230,"8:30 PM"],
+  "2026-07-05":[1230,"8:30 PM"],
+  "2026-07-06":[1230,"8:29 PM"],
+  "2026-07-07":[1229,"8:29 PM"],
+  "2026-07-08":[1229,"8:29 PM"],
+  "2026-07-09":[1229,"8:28 PM"],
+  "2026-07-10":[1228,"8:28 PM"],
+  "2026-07-11":[1228,"8:27 PM"],
+  "2026-07-12":[1227,"8:27 PM"],
+  "2026-07-13":[1227,"8:26 PM"],
+  "2026-07-14":[1226,"8:26 PM"],
+  "2026-07-15":[1226,"8:25 PM"],
+  "2026-07-16":[1225,"8:25 PM"],
+  "2026-07-17":[1224,"8:24 PM"],
+  "2026-07-18":[1224,"8:23 PM"],
+  "2026-07-19":[1223,"8:23 PM"],
+  "2026-07-20":[1222,"8:22 PM"],
+  "2026-07-21":[1221,"8:21 PM"],
+  "2026-07-22":[1221,"8:20 PM"],
+  "2026-07-23":[1220,"8:19 PM"],
+  "2026-07-24":[1219,"8:18 PM"],
+  "2026-07-25":[1218,"8:18 PM"],
+  "2026-07-26":[1217,"8:17 PM"],
+  "2026-07-27":[1216,"8:16 PM"],
+  "2026-07-28":[1215,"8:15 PM"],
+  "2026-07-29":[1214,"8:14 PM"],
+  "2026-07-30":[1213,"8:13 PM"],
+  "2026-07-31":[1212,"8:12 PM"],
+  "2026-08-01":[1211,"8:11 PM"],
+  "2026-08-02":[1210,"8:09 PM"],
+  "2026-08-03":[1209,"8:08 PM"],
+  "2026-08-04":[1208,"8:07 PM"],
+  "2026-08-05":[1207,"8:06 PM"],
+  "2026-08-06":[1205,"8:05 PM"],
+  "2026-08-07":[1204,"8:04 PM"],
+  "2026-08-08":[1203,"8:02 PM"],
+  "2026-08-09":[1202,"8:01 PM"],
+  "2026-08-10":[1200,"8:00 PM"],
+  "2026-08-11":[1199,"7:59 PM"],
+  "2026-08-12":[1198,"7:57 PM"],
+  "2026-08-13":[1196,"7:56 PM"],
+  "2026-08-14":[1195,"7:54 PM"],
+  "2026-08-15":[1194,"7:53 PM"],
+  "2026-08-16":[1192,"7:52 PM"],
+  "2026-08-17":[1191,"7:50 PM"],
+  "2026-08-18":[1189,"7:49 PM"],
+  "2026-08-19":[1188,"7:47 PM"],
+  "2026-08-20":[1186,"7:46 PM"],
+  "2026-08-21":[1185,"7:44 PM"],
+  "2026-08-22":[1183,"7:43 PM"],
+  "2026-08-23":[1182,"7:41 PM"],
+  "2026-08-24":[1180,"7:40 PM"],
+  "2026-08-25":[1179,"7:38 PM"],
+  "2026-08-26":[1177,"7:37 PM"],
+  "2026-08-27":[1176,"7:35 PM"],
+  "2026-08-28":[1174,"7:34 PM"],
+  "2026-08-29":[1173,"7:32 PM"],
+  "2026-08-30":[1171,"7:31 PM"],
+  "2026-08-31":[1169,"7:29 PM"],
+  "2026-09-01":[1168,"7:27 PM"],
+  "2026-09-02":[1166,"7:26 PM"],
+  "2026-09-03":[1165,"7:24 PM"],
+  "2026-09-04":[1163,"7:22 PM"],
+  "2026-09-05":[1161,"7:21 PM"],
+  "2026-09-06":[1160,"7:19 PM"],
+  "2026-09-07":[1158,"7:18 PM"],
+  "2026-09-08":[1156,"7:16 PM"],
+  "2026-09-09":[1155,"7:14 PM"],
+  "2026-09-10":[1153,"7:13 PM"],
+  "2026-09-11":[1151,"7:11 PM"],
+  "2026-09-12":[1150,"7:09 PM"],
+  "2026-09-13":[1148,"7:07 PM"],
+  "2026-09-14":[1146,"7:06 PM"],
+  "2026-09-15":[1145,"7:04 PM"],
+  "2026-09-16":[1143,"7:02 PM"],
+  "2026-09-17":[1141,"7:01 PM"],
+  "2026-09-18":[1140,"6:59 PM"],
+  "2026-09-19":[1138,"6:57 PM"],
+  "2026-09-20":[1136,"6:56 PM"],
+  "2026-09-21":[1134,"6:54 PM"],
+  "2026-09-22":[1133,"6:52 PM"],
+  "2026-09-23":[1131,"6:51 PM"],
+  "2026-09-24":[1129,"6:49 PM"],
+  "2026-09-25":[1128,"6:47 PM"],
+  "2026-09-26":[1126,"6:46 PM"],
+  "2026-09-27":[1124,"6:44 PM"],
+  "2026-09-28":[1123,"6:42 PM"],
+  "2026-09-29":[1121,"6:40 PM"],
+  "2026-09-30":[1119,"6:39 PM"],
+  "2026-10-01":[1118,"6:37 PM"],
+  "2026-10-02":[1116,"6:35 PM"],
+  "2026-10-03":[1114,"6:34 PM"],
+  "2026-10-04":[1113,"6:32 PM"],
+  "2026-10-05":[1111,"6:31 PM"],
+  "2026-10-06":[1109,"6:29 PM"],
+  "2026-10-07":[1108,"6:27 PM"],
+  "2026-10-08":[1106,"6:26 PM"],
+  "2026-10-09":[1105,"6:24 PM"],
+  "2026-10-10":[1103,"6:23 PM"],
+  "2026-10-11":[1101,"6:21 PM"],
+  "2026-10-12":[1100,"6:19 PM"],
+  "2026-10-13":[1098,"6:18 PM"],
+  "2026-10-14":[1097,"6:16 PM"],
+  "2026-10-15":[1095,"6:15 PM"],
+  "2026-10-16":[1094,"6:13 PM"],
+  "2026-10-17":[1092,"6:12 PM"],
+  "2026-10-18":[1091,"6:10 PM"],
+  "2026-10-19":[1089,"6:09 PM"],
+  "2026-10-20":[1088,"6:07 PM"],
+  "2026-10-21":[1086,"6:06 PM"],
+  "2026-10-22":[1085,"6:04 PM"],
+  "2026-10-23":[1084,"6:03 PM"],
+  "2026-10-24":[1082,"6:02 PM"],
+  "2026-10-25":[1081,"6:00 PM"],
+  "2026-10-26":[1079,"5:59 PM"],
+  "2026-10-27":[1078,"5:58 PM"],
+  "2026-10-28":[1077,"5:56 PM"],
+  "2026-10-29":[1076,"5:55 PM"],
+  "2026-10-30":[1074,"5:54 PM"],
+  "2026-10-31":[1073,"5:53 PM"],
+  "2026-11-01":[1012,"4:51 PM"],
+  "2026-11-02":[1011,"4:50 PM"],
+  "2026-11-03":[1009,"4:49 PM"],
+  "2026-11-04":[1008,"4:48 PM"],
+  "2026-11-05":[1007,"4:47 PM"],
+  "2026-11-06":[1006,"4:46 PM"],
+  "2026-11-07":[1005,"4:45 PM"],
+  "2026-11-08":[1004,"4:43 PM"],
+  "2026-11-09":[1003,"4:42 PM"],
+  "2026-11-10":[1002,"4:41 PM"],
+  "2026-11-11":[1001,"4:41 PM"],
+  "2026-11-12":[1000,"4:40 PM"],
+  "2026-11-13":[999,"4:39 PM"],
+  "2026-11-14":[998,"4:38 PM"],
+  "2026-11-15":[997,"4:37 PM"],
+  "2026-11-16":[997,"4:36 PM"],
+  "2026-11-17":[996,"4:35 PM"],
+  "2026-11-18":[995,"4:35 PM"],
+  "2026-11-19":[994,"4:34 PM"],
+  "2026-11-20":[994,"4:33 PM"],
+  "2026-11-21":[993,"4:33 PM"],
+  "2026-11-22":[993,"4:32 PM"],
+  "2026-11-23":[992,"4:32 PM"],
+  "2026-11-24":[991,"4:31 PM"],
+  "2026-11-25":[991,"4:30 PM"],
+  "2026-11-26":[991,"4:30 PM"],
+  "2026-11-27":[990,"4:30 PM"],
+  "2026-11-28":[990,"4:29 PM"],
+  "2026-11-29":[989,"4:29 PM"],
+  "2026-11-30":[989,"4:29 PM"],
+  "2026-12-01":[989,"4:28 PM"],
+  "2026-12-02":[989,"4:28 PM"],
+  "2026-12-03":[988,"4:28 PM"],
+  "2026-12-04":[988,"4:28 PM"],
+  "2026-12-05":[988,"4:28 PM"],
+  "2026-12-06":[988,"4:28 PM"],
+  "2026-12-07":[988,"4:27 PM"],
+  "2026-12-08":[988,"4:27 PM"],
+  "2026-12-09":[988,"4:28 PM"],
+  "2026-12-10":[988,"4:28 PM"],
+  "2026-12-11":[988,"4:28 PM"],
+  "2026-12-12":[988,"4:28 PM"],
+  "2026-12-13":[989,"4:28 PM"],
+  "2026-12-14":[989,"4:28 PM"],
+  "2026-12-15":[989,"4:29 PM"],
+  "2026-12-16":[989,"4:29 PM"],
+  "2026-12-17":[990,"4:29 PM"],
+  "2026-12-18":[990,"4:30 PM"],
+  "2026-12-19":[990,"4:30 PM"],
+  "2026-12-20":[991,"4:30 PM"],
+  "2026-12-21":[991,"4:31 PM"],
+  "2026-12-22":[992,"4:31 PM"],
+  "2026-12-23":[992,"4:32 PM"],
+  "2026-12-24":[993,"4:33 PM"],
+  "2026-12-25":[994,"4:33 PM"],
+  "2026-12-26":[994,"4:34 PM"],
+  "2026-12-27":[995,"4:34 PM"],
+  "2026-12-28":[996,"4:35 PM"],
+  "2026-12-29":[996,"4:36 PM"],
+  "2026-12-30":[997,"4:37 PM"],
+  "2026-12-31":[998,"4:37 PM"],
+  "2027-01-01":[999,"4:38 PM"],
+  "2027-01-02":[1000,"4:39 PM"],
+  "2027-01-03":[1000,"4:40 PM"]
+};
+function getSunsetMinutes(dateStr) {
+  const entry = SUNSET_TABLE[dateStr];
+  return entry ? entry[0] : null;
+}
+function getSunsetLabel(dateStr) {
+  const entry = SUNSET_TABLE[dateStr];
+  return entry ? entry[1] : null;
+}
+function fmtPrice(cents) {
+  if (cents==null) return '—';
+  return '$' + (cents/100).toFixed(0);
+}
+function fmtDate(d) {
+  return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+}
+function fmtDow(d) {
+  return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+}
+function isPeak(d) {
+  if (!META) return false;
+  for (const [s,e] of (META.peak_periods||[]).map(p=>[p[0],p[1]])) {
+    if (d>=s && d<=e) return META.peak_periods.find(p=>p[0]===s)?.[2] || 'Peak';
+  }
+  return null;
+}
+function isHoliday(d) { return META ? META.holidays[d] : null; }
+
+// ── Load data ────────────────────────────────────────────────
+async function init() {
+  try {
+    META = await fetch('data/meta.json',{cache:'no-store'}).then(r=>r.json());
+    const resps = await Promise.all(META.venue_keys.map(vk=>fetch(`data/prices_latest_${vk}.json`,{cache:'no-store'})));
+    LATEST = Object.fromEntries(META.venue_keys.map((vk,i)=>[vk,null]));
+    if (resps.every(r=>r.ok)) {
+      const payloads = await Promise.all(resps.map(r=>r.json()));
+      META.venue_keys.forEach((vk,i) => LATEST[vk] = payloads[i]);
+    } else {
+      const mono = await fetch('data/prices_latest.json',{cache:'no-store'}).then(r=>r.json());
+      LATEST = mono;
+    }
+    buildIndex();
+    updateStatus();
+    renderCoverage();
+    renderCards(buildRows());
+  } catch(e) {
+    document.getElementById('cardsWrap').innerHTML = `<div class="empty-state" style="color:var(--down)">Data unavailable. Verify data/ directory.<br><small>${e.message}</small></div>`;
+  }
+}
+
+function buildIndex() {
+  LATEST_IDX = {};
+  META.venue_keys.forEach(vk => {
+    LATEST_IDX[vk] = {};
+    (LATEST[vk]||[]).forEach(r => {
+      // ESB Premium Early Access is the SAME GA ticket sold at a premium for
+      // the earliest morning tour times — not a separate product. Excluded
+      // from tracker display because no competitor offers a comparable
+      // premium early-morning product, so there is nothing to benchmark
+      // these prices against row-by-row.
+      if (vk === 'esb' && r.tour_group === 'Early Access') return;
+      if (!LATEST_IDX[vk][r.travel_date]) LATEST_IDX[vk][r.travel_date] = [];
+      LATEST_IDX[vk][r.travel_date].push(r);
+    });
+  });
+}
+
+function updateStatus() {
+  const dates = Object.values(META.coverage||{}).map(c=>c.scrape_date).filter(Boolean).sort().pop();
+  if (dates) { const _d = new Date(dates + 'T12:00:00'); document.getElementById('sidebarTs').textContent = 'Last updated: ' + _d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+}
+
+function renderCoverage() {
+  const covRow = document.getElementById('covRow');
+  const vcs = { esb: getComputedStyle(document.documentElement).getPropertyValue('--esb').trim() || '#c9a84c',
+                 edge: getComputedStyle(document.documentElement).getPropertyValue('--edge').trim() || '#78b8d8',
+                 summit: getComputedStyle(document.documentElement).getPropertyValue('--summit').trim() || '#b89fd0',
+                 totr: getComputedStyle(document.documentElement).getPropertyValue('--totr').trim() || '#5cbd96' };
+  covRow.innerHTML = META.venue_keys.map(vk => {
+    const cov = (META.coverage||{})[vk] || {};
+    const name = (META.venues[vk]||{}).name || vk;
+    return `<div class="cov-pill">
+      <div class="cov-pill-dot" style="background:var(--${vk})"></div>
+      <span>${name}</span>
+      ${cov.travel_through ? `· thru <strong>${cov.travel_through}</strong>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function buildRows() {
+  const today = new Date().toISOString().slice(0,10);
+  const eoy = today.slice(0,4) + '-12-31';
+  const allDates = new Set();
+  META.venue_keys.forEach(vk => Object.keys(LATEST_IDX[vk]||{}).forEach(d=>allDates.add(d)));
+  const dates = [...allDates].filter(d=>d>=today && d<=eoy).sort();
+
+  const fromEl = document.getElementById('fromDate');
+  const toEl   = document.getElementById('toDate');
+  if (!fromEl.value && dates.length) fromEl.value = dates[0];
+  if (!toEl.value && dates.length)   toEl.value = dates[Math.min(dates.length-1, 89)];
+
+  const from = fromEl.value || today;
+  const to   = toEl.value   || eoy;
+  const blackout = META.blackout_dates || {};
+
+  FILTERED_ROWS = dates.filter(d => d>=from && d<=to).map(d => {
+    const bvs = blackout[d] || [];
+    const prices = {};
+    META.venue_keys.forEach(vk => {
+      if (bvs.includes(vk)) { prices[vk] = null; return; }
+      const rows = (LATEST_IDX[vk]||{})[d] || [];
+      const valid = rows.filter(r=>r.price_cents!=null && r.status!=='sold_out').map(r=>r.price_cents);
+      prices[vk] = valid.length ? Math.min(...valid) : null;
+    });
+    const vals = Object.values(prices).filter(p=>p!=null);
+    return { date:d, prices, low: vals.length ? Math.min(...vals) : null, high: vals.length ? Math.max(...vals) : null };
+  });
+
+  document.getElementById('totalDates').textContent = FILTERED_ROWS.length;
+  return FILTERED_ROWS;
+}
+
+function applyRange() { SORT = { col:'date', dir:1 }; renderCards(buildRows()); }
+function resetRange() {
+  document.getElementById('fromDate').value = '';
+  document.getElementById('toDate').value = '';
+  SORT = { col:'date', dir:1 };
+  renderCards(buildRows());
+}
+
+function sortRows(rows) {
+  const { col, dir } = SORT;
+  return [...rows].sort((a, b) => {
+    let av, bv;
+    if (col === 'date') { av = a.date; bv = b.date; }
+    else if (col === 'range') {
+      av = a.high != null && a.low != null ? (a.high - a.low) : -1;
+      bv = b.high != null && b.low != null ? (b.high - b.low) : -1;
+    } else {
+      av = a.prices[col] ?? 999999;
+      bv = b.prices[col] ?? 999999;
+    }
+    if (av < bv) return -dir;
+    if (av > bv) return  dir;
+    return 0;
+  });
+}
+
+function setSort(col) {
+  if (SORT.col === col) SORT.dir *= -1;
+  else SORT = { col, dir: 1 };
+  renderCards(FILTERED_ROWS);
+}
+
+function renderCards(rows) {
+  const wrap = document.getElementById('cardsWrap');
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="empty-state">No data for this range.</div>';
+    return;
+  }
+  const vks = META.venue_keys;
+  const names = META.venues;
+  const sorted = sortRows(rows);
+
+  const cards = sorted.map(row => {
+    const origIdx = rows.indexOf(row);
+    const { date, prices, low, high } = row;
+    const peak = isPeak(date);
+    const hol  = isHoliday(date);
+
+    const chips = vks.map(vk => {
+      const p = prices[vk];
+      const bvs = (META.blackout_dates||{})[date]||[];
+      const shortName = names[vk]?.short || names[vk]?.name?.split(' ')[0] || vk.toUpperCase();
+      if (bvs.includes(vk)) return `<span class="dc-chip na">${shortName} · Closed</span>`;
+      if (p == null) return `<span class="dc-chip na">${shortName} · —</span>`;
+      return `<span class="dc-chip ${vk}">\
+<svg width="5" height="5" viewBox="0 0 6 6" style="display:inline;vertical-align:middle;margin-right:3px">\
+<circle cx="3" cy="3" r="3" fill="currentColor"/></svg>${shortName} $${(p/100).toFixed(0)}</span>`;
+    }).join('');
+
+    const rangeText = (low!=null && high!=null && low!==high)
+      ? `$${(low/100).toFixed(0)}–$${(high/100).toFixed(0)}`
+      : (low!=null ? `$${(low/100).toFixed(0)}` : '—');
+
+    const tags = [
+      peak ? `<span class="t-tag peak">${peak}</span>` : '',
+      hol  ? `<span class="t-tag hol">${hol}</span>`   : '',
+    ].filter(Boolean).join('');
+
+    return `<div class="date-card" id="card-${origIdx}">
+      <div class="date-card-header" onclick="toggleCard(this.closest('.date-card'),${origIdx})">
+        <div class="date-card-toggle">
+          <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <polyline points="3,2 7,5 3,8"/>
+          </svg>
+        </div>
+        <div class="dc-left">
+          <div class="dc-date">${fmtDate(date)}</div>
+          <div class="dc-dow">${fmtDow(date)} · ${date}</div>
+          ${tags ? `<div class="dc-tags">${tags}</div>` : ''}
+        </div>
+        <div class="dc-meta-row">${chips}</div>
+        <div class="dc-range">${rangeText}</div>
+      </div>
+      <div class="date-card-body" id="card-body-${origIdx}">
+        <div style="color:var(--text-dim);font-size:12px;padding:6px 0">Loading…</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `<div class="date-cards-list">${cards}</div>`;
+}
+
+function toggleCard(card, idx) {
+  const isOpen = card.classList.contains('open');
+  // Collapse all open cards
+  document.querySelectorAll('.date-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) {
+    card.classList.add('open');
+    renderExpandedTimes(idx, FILTERED_ROWS[idx].date, `card-body-${idx}`);
+  }
+}
+
+// Apply interval bucketing — keep best-priced (or available) row per bucket
+function bucketRows(rows, interval) {
+  if (!interval || interval === 0) return rows;
+  const map = {};
+  rows.forEach(r => {
+    const bkt = Math.floor(timeToMin(r.tour_time) / interval) * interval;
+    const prev = map[bkt];
+    if (!prev) { map[bkt] = r; return; }
+    // Prefer available over sold; then lower price
+    const prevSold = prev.status === 'sold_out' || prev.price_cents == null;
+    const curSold  = r.status === 'sold_out'   || r.price_cents  == null;
+    if (prevSold && !curSold) { map[bkt] = r; return; }
+    if (!prevSold && curSold) return;
+    if (r.price_cents != null && (prev.price_cents == null || r.price_cents < prev.price_cents)) map[bkt] = r;
+  });
+  return Object.values(map).sort((a,b) => timeToMin(a.tour_time) - timeToMin(b.tour_time));
+}
+
+// ── ALIGNED PRICE MATRIX (time rows × venue cols) ──────────
+function renderExpandedTimes(idx, date, targetId) {
+  const inner = document.getElementById(targetId || `card-body-${idx}`);
+  const vks = META.venue_keys;
+  const names = META.venues;
+  const interval = parseInt(document.getElementById('intervalSelect').value) || 15;
+
+  // Get bucketed rows for each venue
+  const byVk = {};
+  vks.forEach(vk => {
+    const rows = ((LATEST_IDX[vk]||{})[date]||[])
+      .slice()
+      .sort((a,b) => timeToMin(a.tour_time) - timeToMin(b.tour_time));
+    byVk[vk] = bucketRows(rows, interval);
+  });
+
+  const hasAny = vks.some(vk => byVk[vk].length > 0);
+  if (!hasAny) {
+    inner.innerHTML = '<div class="empty-state" style="padding:20px 0">No tour times for this date.</div>';
+    return;
+  }
+
+  // Per-venue day low and day high (for low/high highlight)
+  const vkDayLow = {}, vkDayHigh = {};
+  vks.forEach(vk => {
+    const prices = byVk[vk].filter(r => r.price_cents != null).map(r => r.price_cents);
+    vkDayLow[vk]  = prices.length ? Math.min(...prices) : null;
+    vkDayHigh[vk] = prices.length ? Math.max(...prices) : null;
+  });
+
+  // Union all buckets into a single time → {vk: row} map
+  const slotMap = {};
+  const bkt = (m) => interval ? Math.floor(m / interval) * interval : m;
+  vks.forEach(vk => {
+    byVk[vk].forEach(r => {
+      const slot = bkt(timeToMin(r.tour_time));
+      if (!slotMap[slot]) slotMap[slot] = { mins: slot, cells: {} };
+      slotMap[slot].cells[vk] = r;
+    });
+  });
+  const slots = Object.values(slotMap).sort((a, b) => a.mins - b.mins);
+
+  // Fill-forward: carry available price into tour time rows with no data (genuine gap ≤60 min).
+  // Sold-out tour times show their own price but reset the carry source.
+  const lastSeen = {};  // vk → {row, mins}
+  slots.forEach(slot => {
+    vks.forEach(vk => {
+      const r = slot.cells[vk];
+      if (r && r.status !== 'sold_out') {
+        lastSeen[vk] = { row: r, mins: slot.mins };    // available — carry source
+      } else if (r && r.status === 'sold_out') {
+        delete lastSeen[vk];                           // sold-out resets carry
+      } else if (!r && lastSeen[vk] && (slot.mins - lastSeen[vk].mins) <= 60) {
+        slot.cells[vk] = lastSeen[vk].row;             // genuine gap — fill
+      } else if (!r) {
+        delete lastSeen[vk];                           // too wide — stop
+      }
+    });
+  });
+
+  // Astronomical sunset for this date
+  const astroMins = getSunsetMinutes(date);
+  const astroLabel = getSunsetLabel(date);
+  // Sunset window divider is anchored at astronomical sunset itself — the
+  // divider row is inserted just before the first tour time at or after
+  // sunset, so the rows ABOVE the line are pre-sunset and rows BELOW are
+  // at/after real sunset. (Old behavior drew the line 60 min early which
+  // put the divider in the middle of afternoon pricing.)
+  // NOTE: the window is still ONLY a visual guide. It is NOT used to decide
+  // whether a cell is actually priced as a sunset product. Sunset pricing is
+  // venue-specific and row-based:
+  //   - ESB: tour_group ∈ {Sunset, Twilight} (internal keys, never rendered)
+  //   - Edge/Summit/TOR: peak-price run detection via detectSunsetRange
+  const sunsetStart = astroMins != null ? astroMins : 19 * 60;
+  const sunsetEnd   = astroMins != null ? astroMins + 60 : 21 * 60;
+
+  // Build per-venue "true sunset" row sets keyed on row object identity
+  // (row refs are preserved through fill-forward so carried cells inherit).
+  const sunsetRowSets = {};
+  vks.forEach(vk => {
+    const rows = byVk[vk].filter(r => r.price_cents != null && r.status !== 'sold_out');
+    if (!rows.length) { sunsetRowSets[vk] = new Set(); return; }
+    if (vk === 'esb') {
+      sunsetRowSets[vk] = new Set(rows.filter(r => ESB_SUNSET_GROUPS.has(r.tour_group)));
+    } else {
+      const range = detectSunsetRange(rows.map(r => [timeToMin(r.tour_time), r.price_cents]));
+      if (!range) { sunsetRowSets[vk] = new Set(); return; }
+      sunsetRowSets[vk] = new Set(rows.filter(r => {
+        const m = timeToMin(r.tour_time);
+        return m >= range[0] && m <= range[1];
+      }));
+    }
+  });
+
+  // Header row
+  const thead = `<thead><tr>
+    <th class="time-col">Tour Time</th>
+    ${vks.map(vk => {
+      const label = names[vk]?.short || (names[vk]?.name || vk).split(' ')[0];
+      return `<th class="venue-col" style="color:var(--${vk})">
+        <span class="venue-dot" style="background:var(--${vk})"></span>${label}
+      </th>`;
+    }).join('')}
+  </tr></thead>`;
+
+  // Cell renderer. `isVenueSunset` = true only when this specific row is a
+  // real sunset product for its venue (ESB tour_group or peak-price range),
+  // NOT just "sits inside the astronomical window".
+  // `rowHi` / `rowLo` are the max / min cents across venues for this tour
+  // time, used to tint the highest cell pink and the lowest cell light green.
+  function cell(r, vk, isVenueSunset, rowHi, rowLo) {
+    if (!r) return '<td class="price-cell empty">—</td>';
+    const price = r.price_cents;
+    if (price == null || r.status === 'sold_out') {
+      return '<td class="price-cell sold">sold out</td>';
+    }
+    const isLow     = price === vkDayLow[vk] && vkDayHigh[vk] !== vkDayLow[vk];
+    const isRowHigh = rowHi != null && rowLo != null && rowHi !== rowLo && price === rowHi;
+    const isRowLow  = rowHi != null && rowLo != null && rowHi !== rowLo && price === rowLo;
+    const cls = ['price-cell',
+                 isLow ? 'is-low' : '',
+                 isVenueSunset ? 'is-sunset-price' : '',
+                 isRowHigh ? 'row-high' : '',
+                 isRowLow  ? 'row-low'  : ''].filter(Boolean).join(' ');
+    return `<td class="${cls}">$${(price/100).toFixed(0)}</td>`;
+  }
+
+  function sectionRow(label) {
+    return `<tr class="section-header"><td colspan="${vks.length + 1}">${label}</td></tr>`;
+  }
+
+  function sunsetDividerRow() {
+    return `<tr class="sunset-divider"><td colspan="${vks.length + 1}">
+      <span class="sun-icon">🌇</span>Sunset window · Astronomical sunset ${astroLabel ? astroLabel + ' EDT' : '—'}
+    </td></tr>`;
+  }
+
+  // Latest tour time across ALL venues where a cell is a real sunset product.
+  // Drives where the SUNSET section ends and EVENING begins (so Evening starts
+  // right after the last actual sunset price, usually TOR or Edge).
+  let lastSunsetMins = -Infinity;
+  vks.forEach(vk => {
+    sunsetRowSets[vk].forEach(r => {
+      const m = timeToMin(r.tour_time);
+      if (m > lastSunsetMins) lastSunsetMins = m;
+    });
+  });
+
+  // Build body with section headers + sunset divider
+  let html = '';
+  let currentSection = null;
+  let sunsetDividerInserted = false;
+
+  slots.forEach(slot => {
+    const t = slot.mins;
+    const isSunsetRow = astroMins != null && t >= sunsetStart && t <= sunsetEnd;
+
+    // Section label:
+    //   Morning   = t <  12:00
+    //   Afternoon = 12:00 ≤ t < astronomical sunset
+    //   Sunset    = astronomical sunset ≤ t ≤ last real sunset product
+    //   Evening   = everything after the last sunset product
+    let section;
+    if (t < 12 * 60) section = 'Morning';
+    else if (t < sunsetStart) section = 'Afternoon';
+    else if (lastSunsetMins > -Infinity && t <= lastSunsetMins) section = null; // sunset divider stands in
+    else if (lastSunsetMins === -Infinity && astroMins != null && t < astroMins + 60) section = null; // no sunset products → divider still marks the astro line
+    else section = 'Evening';
+
+    // Insert the sunset orange divider the first time we cross into sunset —
+    // it functions as the SUNSET section header (bigger, more informative).
+    if (!sunsetDividerInserted && astroMins != null && t >= sunsetStart) {
+      html += sunsetDividerRow();
+      sunsetDividerInserted = true;
+      currentSection = 'Sunset';
+    }
+
+    if (section && section !== currentSection) {
+      html += sectionRow(section);
+      currentSection = section;
+    }
+
+    // Row high/low across venues for this tour time — ignore sold-out / empty
+    const rowPrices = vks
+      .map(vk => slot.cells[vk])
+      .filter(r => r && r.price_cents != null && r.status !== 'sold_out')
+      .map(r => r.price_cents);
+    const rowHi = rowPrices.length ? Math.max(...rowPrices) : null;
+    const rowLo = rowPrices.length ? Math.min(...rowPrices) : null;
+
+    html += `<tr${isSunsetRow ? ' class="is-sunset"' : ''}>
+      <td class="time-cell">${minsToLabel(t)}</td>
+      ${vks.map(vk => {
+        const r = slot.cells[vk];
+        // Row-identity check so fill-forwarded cells inherit sunset flag
+        const isVenueSunset = r ? sunsetRowSets[vk].has(r) : false;
+        return cell(r, vk, isVenueSunset, rowHi, rowLo);
+      }).join('')}
+    </tr>`;
+  });
+
+  // Header bar with astronomical context
+  const headerBar = `<div class="matrix-header-bar">
+    <span class="mhb-title">${slots.length} tour times · ${interval ? interval + '-min grid' : 'all times'}</span>
+    ${astroLabel ? `<span class="mhb-astro">🌇 Sunset ${astroLabel} EDT</span>` : ''}
+  </div>`;
+
+  // Legend
+  const legend = `<div class="matrix-legend">
+    <span class="legend-item"><span class="legend-swatch row-low"></span>Lowest price</span>
+    <span class="legend-item"><span class="legend-swatch row-high"></span>Highest price</span>
+    <span class="legend-item"><span class="legend-num sunset">$58</span>Sunset product</span>
+    <span class="legend-item"><span class="legend-num low">$44</span>Attraction day low</span>
+    <span class="legend-item" style="margin-left:auto">Astronomical sunset ${astroLabel ? astroLabel + ' EDT' : '—'}</span>
+  </div>`;
+
+  inner.innerHTML = `<div class="matrix-wrap">
+    ${headerBar}
+    ${legend.replace('matrix-legend', 'matrix-legend matrix-legend-top')}
+    <div class="matrix-scroll">
+      <table class="price-matrix">${thead}<tbody>${html}</tbody></table>
+    </div>
+    ${legend}
+  </div>`;
+}
+
+function reRenderOpen() {
+  const openCard = document.querySelector('.date-card.open');
+  if (!openCard) return;
+  const idx = parseInt(openCard.id.replace('card-', ''));
+  if (!isNaN(idx) && FILTERED_ROWS[idx]) renderExpandedTimes(idx, FILTERED_ROWS[idx].date, `card-body-${idx}`);
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+init();
+</script>
+<script src="chat-widget.js" defer></script>
+<script src="theme-toggle.js" defer></script>
+</body>
+</html>

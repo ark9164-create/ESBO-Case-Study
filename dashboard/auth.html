@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence · Access</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* auth page overrides body dot grid */
+body.auth-page-body::before {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.012) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+</style>
+</head>
+<body class="auth-page-body">
+<div class="auth-body">
+  <div class="auth-card" role="main">
+
+    <!-- Art Deco ornament -->
+    <div class="auth-ornament" aria-hidden="true">
+      <div class="auth-orn-line"></div>
+      <div class="auth-orn-diamond"></div>
+      <div class="auth-orn-line r"></div>
+    </div>
+
+    <div class="auth-wordmark">ESBO</div>
+    <div class="auth-tagline">Price Intelligence Platform</div>
+
+    <div class="auth-divider"></div>
+
+    <form id="authForm" novalidate>
+      <div class="auth-field">
+        <label class="auth-field-label" for="passInput">Access Key</label>
+        <div class="auth-input-wrap">
+          <input
+            type="password"
+            id="passInput"
+            class="auth-input"
+            placeholder="Enter access key"
+            autocomplete="current-password"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          >
+          <button type="button" class="auth-eye" id="togglePass" aria-label="Toggle visibility">
+            <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-submit">Unlock Dashboard</button>
+      <div class="auth-error" id="authError">Incorrect access key. Please try again.</div>
+    </form>
+
+    <div class="auth-footer-note">
+      Empire State Building Observatory<br>
+      Revenue Intelligence · Internal Use Only
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  // If already authenticated, skip straight to dashboard
+  if (sessionStorage.getItem('ps_auth') === '1') {
+    window.location.replace('guide.html');
+    return;
+  }
+
+  const PASS = 'ESBO1';
+  const form   = document.getElementById('authForm');
+  const input  = document.getElementById('passInput');
+  const errEl  = document.getElementById('authError');
+  const toggle = document.getElementById('togglePass');
+  const eyeIcon = document.getElementById('eyeIcon');
+
+  // Eye toggle
+  const eyeOpen = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  const eyeSlash = `<line x1="1" y1="1" x2="23" y2="23"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"/><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.045 18.045 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>`;
+
+  toggle.addEventListener('click', function () {
+    const isPass = input.type === 'password';
+    input.type = isPass ? 'text' : 'password';
+    eyeIcon.innerHTML = isPass ? eyeSlash : eyeOpen;
+  });
+
+  // Submit
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const val = input.value;
+    if (val === PASS) {
+      sessionStorage.setItem('ps_auth', '1');
+      window.location.replace('guide.html');
+    } else {
+      input.classList.add('shake');
+      errEl.classList.add('show');
+      input.value = '';
+      input.focus();
+      input.addEventListener('animationend', function () {
+        input.classList.remove('shake');
+      }, { once: true });
+    }
+  });
+
+  input.addEventListener('input', function () {
+    errEl.classList.remove('show');
+  });
+
+  // Auto-focus
+  input.focus();
+})();
+</script>
+</body>
+</html>

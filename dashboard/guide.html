@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence · Site Guide</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   SITE GUIDE — Single-Scroll Reference Layout
+   All 5 pages visible at once. No clicking. Just scroll.
+   ══════════════════════════════════════════════════════════════ */
+
+.guide-intro {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.guide-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  max-width: 480px;
+}
+
+/* Page section — each of the 5 pages */
+.page-section {
+  margin-bottom: 1.8rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--gold-border);
+}
+
+.page-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.page-icon svg {
+  width: 16px;
+  height: 16px;
+  color: var(--gold);
+}
+
+.page-name {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-gold);
+  letter-spacing: 0.04em;
+}
+
+.page-link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: none;
+  padding: 0.35rem 0.7rem;
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--r-sm);
+  transition: all 0.15s;
+}
+
+.page-link:hover {
+  background: var(--gold-glow-md);
+  border-color: var(--gold);
+}
+
+.page-link svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Feature grid — stacked cards for readability */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 0.75rem;
+}
+
+.feature-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.feature-row:hover {
+  border-color: var(--gold-border);
+  background: var(--bg-card-hover);
+}
+
+.feat-name-col {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.feat-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.feat-location {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.feat-location.gold {
+  color: var(--gold);
+  background: var(--gold-subtle);
+}
+
+.feat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.feat-shows {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.feat-shows strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.feat-use {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--gold-dim);
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--gold-border);
+}
+
+/* Column headers hidden — not needed for card layout */
+.grid-header {
+  display: none;
+}
+
+/* Quick nav pills at top */
+.quick-nav {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.quick-nav-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.nav-pill:hover {
+  background: var(--gold-subtle);
+  border-color: var(--gold-border);
+  color: var(--gold);
+}
+
+.nav-pill svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .page-header {
+    flex-wrap: wrap;
+  }
+  .page-link {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap"><span class="brand-diamond"></span></div>
+        <span class="brand-rule"></span>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <span class="sidebar-sub">Price Intelligence</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item active">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+        <a href="index.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10m-10 7h16"/></svg>
+          Executive Overview
+        </a>
+        <a href="tracker.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 4h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg>
+          Price Tracker
+        </a>
+        <a href="sunset.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Sunset Analysis
+        </a>
+        <a href="trends.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <span class="status-dot live"></span>
+        <span class="status-label">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="lastUpdated">Loading...</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">Site Guide</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="currentDate"></span>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <svg class="sun-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="moon-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="content">
+      <!-- Welcome banner -->
+      <div class="welcome-banner" style="background: linear-gradient(135deg, var(--gold-subtle), var(--bg-elevated)); border: 1px solid var(--gold-border); border-radius: var(--r-md); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+          <div style="width: 36px; height: 36px; background: var(--gold-glow-md); border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="18" height="18" fill="none" stroke="var(--gold)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <h2 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--text-gold); margin: 0 0 0.35rem 0;">Welcome to ESBO Price Intelligence</h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">Live competitor pricing data for NYC observation decks. Start with the <a href="index.html" style="color: var(--gold); text-decoration: underline;">Executive Overview</a> for KPIs, or explore the pages below.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intro -->
+      <div class="guide-intro">
+        <h1 class="guide-title">What's on each page</h1>
+        <p class="guide-subtitle">Quick reference for all features. Scroll to scan everything at once.</p>
+      </div>
+
+      <!-- Quick nav -->
+      <nav class="quick-nav">
+        <span class="quick-nav-label">Jump to:</span>
+        <a href="#overview" class="nav-pill">Overview</a>
+        <a href="#tracker" class="nav-pill">Tracker</a>
+        <a href="#sunset" class="nav-pill">Sunset</a>
+        <a href="#trends" class="nav-pill">Trends</a>
+        <a href="#methodology" class="nav-pill">Methodology</a>
+        <a href="#case-study" class="nav-pill">Case Study</a>
+      </nav>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           EXECUTIVE OVERVIEW
+           ═══════════════════════════════════════════════════════════ -->
+      <section class="page-section" id="overview">
+        <div class="page-header">
+          <div class="page-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 5h16M4 12h10m-10 7h16"/></svg>
+          </div>
+          <span class="page-name">Executive Overview</span>
+          <a href="index.html" class="page-link">
+            Open page
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">KPI Cards</span>
+              <span class="feat-location">top of page</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows"><strong>Price Moves:</strong> <span id="guide-change-count">64</span> changes detected<br><strong>Forward Coverage:</strong> 267 days through late December</div>
+              <div class="feat-use">High move count = competitors repriced</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Product Tier Matrix</span>
+              <span class="feat-location gold">expandable</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">10 product tiers across 4 attractions<br>"Dyn" badge = prices change dynamically</div>
+              <div class="feat-use">Click row to expand. Compare product gaps.</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Market Pulse</span>
+              <span class="feat-location gold">collapsible</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Latest price changes: attraction, date, delta<br><span id="guide-change-count2">64</span> changes across <span id="guide-change-dates">5</span> dates</div>
+              <div class="feat-use">See who moved and by how much</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Limited-Time Offers</span>
+              <span class="feat-location gold">collapsible</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">11 active promotions: bundles, passes<br>Grouped by attraction</div>
+              <div class="feat-use">See what competitors run beyond base prices</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Fee Comparability</span>
+              <span class="feat-location gold">collapsible</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">ESB $5/txn, Edge $2/ticket, Summit $3/order, TOR embedded</div>
+              <div class="feat-use">Solo vs. family price rank changes</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">AI Market Brief</span>
+              <span class="feat-location">ai generated</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Plain-English summary of notable changes</div>
+              <div class="feat-use">Quick narrative of what changed</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           PRICE TRACKER
+           ═══════════════════════════════════════════════════════════ -->
+      <section class="page-section" id="tracker">
+        <div class="page-header">
+          <div class="page-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 4h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg>
+          </div>
+          <span class="page-name">Price Tracker</span>
+          <a href="tracker.html" class="page-link">
+            Open page
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Filter Bar</span>
+              <span class="feat-location">top controls</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">FROM date, TO date, INTERVAL dropdown<br>(15-min, 30-min, hourly, all)</div>
+              <div class="feat-use">Set range, click Apply. Reset to clear.</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Coverage Pills</span>
+              <span class="feat-location">below filters</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Data range per attraction<br>ESB Sep 30, Edge Jan 3, Summit Oct 31, TOR Dec 31</div>
+              <div class="feat-use">Check coverage before you filter to future dates</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Date Rows</span>
+              <span class="feat-location gold">expandable</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">268 dates with attraction price chips<br>EMPIRE $44, EDGE $47, etc.</div>
+              <div class="feat-use">Click any row to expand tour-time detail</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Tour Time Grid</span>
+              <span class="feat-location gold">expanded view</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">61 tour times × 4 attractions<br>Green = lowest, Pink = highest, Orange = sunset</div>
+              <div class="feat-use">Compare prices at same tour time across attractions</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           SUNSET ANALYSIS
+           ═══════════════════════════════════════════════════════════ -->
+      <section class="page-section" id="sunset">
+        <div class="page-header">
+          <div class="page-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </div>
+          <span class="page-name">Sunset Analysis</span>
+          <a href="sunset.html" class="page-link">
+            Open page
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Filter Bar</span>
+              <span class="feat-location">top controls</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Month, Week, Date dropdowns<br>ESB Upsell Min/Max fields (268 dates)</div>
+              <div class="feat-use">Narrow to specific periods or upsell thresholds</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Per-Attraction Structure</span>
+              <span class="feat-location">4 cards</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">One card per attraction: sunset detection method, price range, median upsell, distribution histogram</div>
+              <div class="feat-use">Shows how each attraction prices sunset differently</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Sunset Pricing Comparison</span>
+              <span class="feat-location gold">collapsible</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows"><strong>3 views:</strong> By Date, By Tour Time, By Week<br>All 4 attractions' peak sunset prices side by side</div>
+              <div class="feat-use">Find dates and tour times where ESB has the most pricing headroom</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Comparison Filters</span>
+              <span class="feat-location gold">toolbar</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Day-of-week filter, rank filter (show all / ESB lowest / ESB not lowest / ESB highest), tour time picker (By Tour Time view)</div>
+              <div class="feat-use">Isolate specific patterns. Sortable columns.</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Calculation Box</span>
+              <span class="feat-location">yellow border</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Sunset premium = peak sunset price minus 12:00 PM price<br>Same method for all 4 attractions</div>
+              <div class="feat-use">Explains the methodology used for all numbers</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Summary Cards</span>
+              <span class="feat-location">4 cards</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">ESB +$10, Edge +$16, Summit +$13, TOR +$12<br>~267 dates each</div>
+              <div class="feat-use">Edge leads. ESB below market average.</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">By Travel Date</span>
+              <span class="feat-location">bottom</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Per-date sunset data, all 4 attractions<br>Scrollable expandable cards</div>
+              <div class="feat-use">Drill into specific dates to compare</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           TRENDS & PATTERNS
+           ═══════════════════════════════════════════════════════════ -->
+      <section class="page-section" id="trends">
+        <div class="page-header">
+          <div class="page-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
+          </div>
+          <span class="page-name">Trends &amp; Patterns</span>
+          <a href="trends.html" class="page-link">
+            Open page
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Status Cards</span>
+              <span class="feat-location">4 cards</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">ESB: 8 moves, net +$0<br>Edge: 64 moves, net -$205<br>Summit/TOR: HELD</div>
+              <div class="feat-use">Who is repricing vs. holding</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">KPI Cards</span>
+              <span class="feat-location">4 metrics</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">72 moves (8↑, 56↓), Net -$205<br>Biggest: Edge -$6 on Apr 12</div>
+              <div class="feat-use">Market trending up or down overall</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Two Playbooks</span>
+              <span class="feat-location gold">split panel</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows"><strong>Full-day:</strong> 50+ moves at once<br><strong>Surgical:</strong> few targeted changes</div>
+              <div class="feat-use">Click row to see competitor strategy</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Price Curve</span>
+              <span class="feat-location">interactive</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">GA price by tour time, all 4 attractions<br>Uses ESB 15-min grid, others snap to nearest</div>
+              <div class="feat-use">Toggle attractions on/off to compare</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Status Changes</span>
+              <span class="feat-location">filterable</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Reopened + sold out tour times<br>Filter by attraction</div>
+              <div class="feat-use">Track inventory changes separate from price moves</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Layout</span>
+              <span class="feat-location">collapsible</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Click section headers to expand/collapse</div>
+              <div class="feat-use">Reduce scrolling, focus on what matters</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           METHODOLOGY
+           ═══════════════════════════════════════════════════════════ -->
+      <section class="page-section" id="methodology">
+        <div class="page-header">
+          <div class="page-icon">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <span class="page-name">Methodology</span>
+          <a href="methodology.html" class="page-link">
+            Open page
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Data Collection</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">4 attractions, 1 scrape/day via Playwright</div>
+              <div class="feat-use">ESB ~173d, Edge ~265d, Summit ~200d, TOR ~265d</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Schema</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">attraction, travel_date, tour_time, price, status</div>
+              <div class="feat-use">Status = available or sold_out</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Fee Normalization</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">ESB $5/txn, Edge $2/ticket, Summit $3/order, TOR embedded</div>
+              <div class="feat-use">ESB highest solo; Edge/TOR lowest for groups</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Anomaly Rules</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Sold-out = carry forward last price<br>Outlier = >3σ from 30-day mean</div>
+              <div class="feat-use">Data quality safeguards</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Sunset Detection</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">ESB: tour group labels<br>Others: price-plateau vs. noon baseline</div>
+              <div class="feat-use">Consistent method across attractions</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">AI Utilization</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Claude Code for scrapers, schema, site</div>
+              <div class="feat-use">48-hour build</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Limitations</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">No pre-launch baseline<br>Scrape-time snapshots only</div>
+              <div class="feat-use">What the data cannot tell you</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Infrastructure</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Current: SQLite + static site<br>Production: Azure stack</div>
+              <div class="feat-use">$58-99/month estimated</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           CASE STUDY
+           ═══════════════════════════════════════════════════════════ -->
+      <section class="page-section" id="case-study">
+        <div class="page-header">
+          <div class="page-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h10m-10 7h16"/></svg>
+          </div>
+          <span class="page-name">Case Study</span>
+          <a href="case-study.html" class="page-link">
+            Open page
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Section 1: Data Collection</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Volume, storage, frequency, method, limitations</div>
+              <div class="feat-use">How we built the scraper infrastructure</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Section 2: Data Manipulation</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Schema, fee normalization, sunset premium calc, bad data handling</div>
+              <div class="feat-use">How we made prices comparable across attractions</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Section 3: AI Utilization</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Claude Code, 48-hour build, limitations</div>
+              <div class="feat-use">What AI built and what it couldn't do</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Section 4: Analysis</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Pricing trends, competitive positioning, timing/seasonality</div>
+              <div class="feat-use">ESB lowest on 79% of sunset tour times</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Section 5: Revenue Recommendations</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">5 recs: $64 tier, twilight extension, advance discount, membership, fee restructure</div>
+              <div class="feat-use">Each rec shows what public data proves + inputs needed</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-name-col">
+              <span class="feat-name">Section 6: Additional Considerations</span>
+            </div>
+            <div class="feat-content">
+              <div class="feat-shows">Data gaps, external feeds, inventory tie-in, production architecture</div>
+              <div class="feat-use">$58-99/mo Azure stack estimate</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+  </main>
+</div>
+
+<script>
+// Smooth scroll for quick nav
+document.querySelectorAll('.nav-pill').forEach(pill => {
+  pill.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(pill.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// Date and meta
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+fetch('data/meta.json').then(r => r.ok ? r.json() : Promise.reject()).then(m => {
+  const d = m.built_at ? new Date(m.built_at) : null;
+  document.getElementById('lastUpdated').textContent = d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Unknown';
+}).catch(() => { document.getElementById('lastUpdated').textContent = 'Unknown'; });
+
+// Live price change counts
+fetch('data/price_changes.json', { cache: 'no-store' })
+  .then(r => r.ok ? r.json() : null)
+  .then(changes => {
+    if (!changes || !changes.length) return;
+    const latestDate = changes.map(c => (c.detected_at||'').slice(0,10)).filter(Boolean).sort().at(-1);
+    const moves = changes.filter(c =>
+      (c.detected_at||'').startsWith(latestDate) &&
+      c.old_price_cents != null && c.new_price_cents != null &&
+      c.old_price_cents !== c.new_price_cents
+    );
+    const uniqueDates = new Set(moves.map(c => (c.travel_date||'').slice(0,10)).filter(Boolean)).size;
+    const n = moves.length;
+    const el1 = document.getElementById('guide-change-count');
+    const el2 = document.getElementById('guide-change-count2');
+    const el3 = document.getElementById('guide-change-dates');
+    if (el1) el1.textContent = n;
+    if (el2) el2.textContent = n;
+    if (el3) el3.textContent = uniqueDates;
+  })
+  .catch(() => {});
+
+// Theme toggle
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+  localStorage.setItem('ps_theme', isLight ? '' : 'light');
+});
+</script>
+<!-- Floating chat widget -->
+<script src="chat-widget.js" defer></script>
+</body>
+</html>

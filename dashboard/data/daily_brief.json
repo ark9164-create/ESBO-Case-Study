@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-12T14:33:51",
+  "date": "Apr 12, 2026",
+  "headline": "Edge leads on price, ESB holds sunset premium",
+  "body": "Edge is the lowest-priced attraction today at $42 all-in for morning tour times, undercutting ESB's $48 Opening tier by $6. However, ESB maintains the strongest sunset positioning - peak Sunset/Twilight prices reach $62 vs Edge's $54 evening slots. TOR is competitive at $42-52 range. Summit sits highest at $55+ across most tour times. Weekend demand is lifting all prices 8-12% above weekday levels.",
+  "opportunities": [
+    "ESB Late Afternoon at $52 is $2 below Edge's equivalent window - potential to close gap",
+    "TOR afternoon tour times showing 15% sell-through, signaling soft demand - monitor for price drops",
+    "Edge Advance Saver pulling bookings 14+ days out - ESB has no equivalent forward discount"
+  ],
+  "model": "mistralai/mistral-small-3.2-24b-instruct"
+}

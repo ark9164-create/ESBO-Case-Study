@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESBO Price Intelligence — Sunset Analysis</title>
+<script>if(sessionStorage.getItem('ps_auth')!=='1'){location.replace('auth.html');}</script>
+<script>if(localStorage.getItem('ps_theme')!=='dark'){document.documentElement.setAttribute('data-theme','light');}</script>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── PAGE-SPECIFIC: SUNSET ANALYSIS ────────────────────── */
+
+/* Filter bar */
+.sunset-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.filter-group label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.filter-group select,
+.filter-group input[type="number"] {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 10px;
+  height: 32px;
+  min-width: 140px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.filter-group input[type="number"] {
+  min-width: 90px;
+}
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: var(--gold-dim);
+}
+.filter-chip {
+  padding: 6px 11px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid var(--gold-dim);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--gold);
+  white-space: nowrap;
+  align-self: flex-end;
+  margin-bottom: 1px;
+}
+
+/* Venue avg cards row */
+.venue-avg-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.venue-avg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.venue-avg-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 8px 0 0 8px;
+}
+.venue-avg-card.esb::before  { background: var(--esb); box-shadow: 0 0 10px rgba(212,168,67,0.25); }
+.venue-avg-card.edge::before { background: var(--edge); box-shadow: 0 0 10px rgba(120,184,216,0.25); }
+.venue-avg-card.summit::before { background: var(--summit); box-shadow: 0 0 10px rgba(184,159,208,0.25); }
+.venue-avg-card.totr::before { background: var(--totr); box-shadow: 0 0 10px rgba(92,189,150,0.25); }
+.venue-avg-card .vac-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.venue-avg-card.esb  .vac-name { color: var(--esb); }
+.venue-avg-card.edge .vac-name { color: var(--edge); }
+.venue-avg-card.summit .vac-name { color: var(--summit); }
+.venue-avg-card.totr .vac-name { color: var(--totr); }
+.vac-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.vac-price {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.vac-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.vac-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+.vac-stat { }
+.vac-stat-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  margin-bottom: 1px;
+}
+.vac-stat-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.vac-stat-val.up   { color: var(--up); }
+.vac-stat-val.down { color: var(--down); }
+.vac-n {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+/* Upsell bucket distribution */
+.vac-dist {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.vac-dist-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.dist-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  margin-bottom: 3px;
+}
+.dist-row.is-mode { color: var(--text-primary); font-weight: 700; }
+.dist-val {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.dist-row.is-mode .dist-val { color: #fb923c; }
+.dist-bar-wrap {
+  background: rgba(255,255,255,0.04);
+  border-radius: 2px;
+  height: 8px;
+  overflow: hidden;
+}
+.dist-bar {
+  height: 100%;
+  border-radius: 2px;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.dist-row.is-mode .dist-bar { opacity: 1; }
+.dist-bar.esb    { background: var(--esb); }
+.dist-bar.edge   { background: var(--edge); }
+.dist-bar.summit { background: var(--summit); }
+.dist-bar.totr   { background: var(--totr); }
+.dist-ct {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.dist-row.is-mode .dist-ct { color: var(--text-secondary); }
+
+/* Date cards */
+.date-cards-list { display: flex; flex-direction: column; gap: 8px; }
+
+.date-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.date-card:hover { border-color: rgba(201,168,76,0.3); }
+.date-card.open  { border-color: var(--gold-dim); }
+
+.date-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.date-card-toggle {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  transition: transform 0.2s, color 0.15s;
+}
+.date-card.open .date-card-toggle { transform: rotate(90deg); color: var(--gold); }
+.date-card-toggle svg { width: 14px; height: 14px; }
+
+.dc-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 180px;
+}
+.dc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dc-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.dc-chip.esb  { background: rgba(212,168,67,0.12); color: var(--esb); border: 1px solid rgba(212,168,67,0.3); }
+.dc-chip.edge { background: rgba(120,184,216,0.1); color: var(--edge); border: 1px solid rgba(120,184,216,0.25); }
+.dc-chip.totr { background: rgba(92,189,150,0.1);  color: var(--totr); border: 1px solid rgba(92,189,150,0.25); }
+.dc-chip.neutral { background: rgba(78,72,64,0.3); color: var(--text-dim); border: 1px solid var(--border); }
+
+.dc-peak {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.dc-peak strong { color: var(--text-primary); }
+
+.date-card-body {
+  display: none;
+  padding: 0 16px 16px;
+}
+.date-card.open .date-card-body { display: block; }
+
+/* Sunset detail table */
+.sunset-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.sunset-detail-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.sunset-detail-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+.sunset-detail-table tr:last-child td { border-bottom: none; }
+.sunset-detail-table td.venue-cell {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.sunset-detail-table td.venue-cell.esb  { color: var(--esb); }
+.sunset-detail-table td.venue-cell.edge { color: var(--edge); }
+.sunset-detail-table td.venue-cell.totr { color: var(--totr); }
+.sunset-detail-table td.price-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.sunset-detail-table td.upsell-cell {
+  font-weight: 700;
+}
+.upsell-pos { color: var(--up); }
+.upsell-neg { color: var(--down); }
+.cell-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.no-data-row td { color: var(--text-dim); font-style: italic; }
+
+.fallback-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-style: italic;
+}
+
+/* Astronomical context bar */
+.sunset-astro-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  margin-bottom: 12px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  line-height: 1.5;
+}
+.sunset-astro-bar strong { color: var(--gold); font-weight: 700; }
+.astro-sep { color: var(--text-dim); margin: 0 2px; }
+.astro-offset-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* Sunset pricing comparison panel (collapsible) */
+.opp-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+.opp-panel[open] { border-color: var(--gold-dim); }
+.opp-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+.opp-summary-bar::-webkit-details-marker { display: none; }
+.opp-summary-bar::marker { display: none; content: ''; }
+.opp-summary-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.opp-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.opp-panel-count {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.opp-chevron {
+  color: var(--text-dim);
+  transition: transform 0.2s, color 0.15s;
+  flex-shrink: 0;
+}
+.opp-panel[open] .opp-chevron { transform: rotate(90deg); color: var(--gold); }
+.opp-panel-body { padding: 0 18px 16px; }
+
+/* Toolbar */
+.opp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.opp-toggle-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.opp-toggle-btn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.opp-toggle-btn:not(:last-child) { border-right: 1px solid var(--border); }
+.opp-toggle-btn.active {
+  background: rgba(201,168,76,0.12);
+  color: var(--gold);
+}
+.opp-toggle-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+}
+.opp-select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 5px 24px 5px 8px;
+  height: 28px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+.opp-select:focus { border-color: var(--gold-dim); }
+.opp-toolbar-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.opp-toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+}
+.opp-chip {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+/* Table */
+.opp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.opp-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.opp-table th:hover { color: var(--text-secondary); }
+.opp-table th.sorted { color: var(--gold); }
+.opp-table th .sort-arrow {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 9px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.opp-table th:hover .sort-arrow { opacity: 0.4; }
+.opp-table th.sorted .sort-arrow { opacity: 1; }
+.opp-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+}
+.opp-table tr:last-child td { border-bottom: none; }
+.opp-table .opp-dow {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+.opp-table tr.opp-highlight { background: rgba(201,168,76,0.04); }
+.opp-table .opp-gap {
+  font-size: 10px;
+  font-weight: 600;
+}
+.opp-table .opp-gap.neg { color: var(--up); }
+.opp-table .opp-gap.pos { color: var(--down); }
+
+/* Section header */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.section-count {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Loading */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* Select arrow */
+.filter-group { position: relative; }
+.select-wrap { position: relative; display: flex; align-items: center; }
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-dim);
+  pointer-events: none;
+}
+.select-wrap select { padding-right: 28px; width: 100%; }
+
+/* Per-venue panels inside expanded card */
+.venue-panels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.venue-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.venue-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px 7px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.venue-panel-header .vph-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.venue-panel.esb  .venue-panel-header { color: var(--esb); }
+.venue-panel.edge .venue-panel-header { color: var(--edge); }
+.venue-panel.totr .venue-panel-header { color: var(--totr); }
+.venue-panel.esb  .vph-dot { background: var(--esb); }
+.venue-panel.edge .vph-dot { background: var(--edge); }
+.venue-panel.totr .vph-dot { background: var(--totr); }
+
+.tour-time-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.tour-time-table th {
+  text-align: left;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 5px 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.tour-time-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+.tour-time-table tr:last-child td { border-bottom: none; }
+.tour-time-table td.tt-time { color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tour-time-table td.tt-price { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.tour-time-table td.tt-tag  { }
+.tour-time-table td.tt-lift { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tour-time-table tr.is-baseline { opacity: 0.65; }
+.tour-time-table tr.is-pre     { opacity: 0.80; }
+.tour-time-table tr.is-sunset  { }
+.sunset-divider-row td {
+  padding: 0;
+  border-bottom: none !important;
+}
+.sunset-divider-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(201,168,76,0.05);
+  border-top: 1px solid var(--gold-dim);
+  border-bottom: 1px solid var(--gold-dim);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.tt-tag-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tt-tag-badge.sunset { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+.tt-tag-badge.twilight { background: rgba(201,168,76,0.1); color: #b89a40; border: 1px solid rgba(201,168,76,0.2); }
+.tt-tag-badge.pre2 { background: rgba(139,130,120,0.12); color: var(--text-secondary); border: 1px solid var(--border); }
+.tt-tag-badge.peak { background: rgba(92,189,150,0.1); color: var(--totr); border: 1px solid rgba(92,189,150,0.2); }
+.lift-pos { color: var(--up); }
+.lift-zero { color: var(--text-dim); }
+.vp-no-data { padding: 16px; text-align: center; color: var(--text-dim); font-size: 11px; font-style: italic; }
+
+/* ── Swim-lane sunset layout ────────────────────────── */
+.swimlane-wrap {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.25);
+}
+.swimlane-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0) 70%), var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.swimlane-topbar .mhb-title {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.swimlane-topbar .mhb-astro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.32);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.swimlane-scroll {
+  overflow-x: auto;
+  padding: 18px 18px 20px;
+}
+
+/* Shared row grid — fixed 130px label column */
+.swimlane-axis-row,
+.swimlane-row {
+  display: grid;
+  grid-template-columns: 130px minmax(680px, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.swimlane-axis-row { margin-bottom: 10px; }
+.swimlane-axis-spacer {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+.swimlane-axis {
+  display: grid;
+  gap: 2px;
+  font-size: 0.64rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  padding: 0 1px;
+}
+.swimlane-axis-label {
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Venue rows */
+.swimlane-row + .swimlane-row { margin-top: 8px; }
+.swimlane-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding-right: 4px;
+}
+.swimlane-row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.swimlane-row-label.esb    .swimlane-row-name { color: var(--esb); }
+.swimlane-row-label.edge   .swimlane-row-name { color: var(--edge); }
+.swimlane-row-label.summit .swimlane-row-name { color: var(--summit); }
+.swimlane-row-label.totr   .swimlane-row-name { color: var(--totr); }
+.swimlane-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+.swimlane-row-meta {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.swimlane-row-meta .meta-sep { opacity: 0.45; margin: 0 3px; }
+
+/* Track (cell strip) */
+.swimlane-track-shell { position: relative; }
+.swimlane-track {
+  display: grid;
+  gap: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Cells */
+.swimlane-cell {
+  appearance: none;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.055);
+  border-radius: 4px;
+  height: 40px;
+  padding: 0;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  overflow: visible;
+}
+.swimlane-cell:hover {
+  border-color: rgba(255,255,255,0.28);
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+.swimlane-cell.empty {
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255,255,255,0.018) 0 6px,
+    transparent 6px 12px
+  );
+  border-color: rgba(255,255,255,0.035);
+  cursor: default;
+}
+.swimlane-cell.empty:hover { transform: none; filter: none; border-color: rgba(255,255,255,0.035); }
+.swimlane-cell.is-gap {
+  opacity: 0.55;
+  cursor: pointer;
+}
+.swimlane-cell.is-sunset {
+  border-color: rgba(251, 146, 60, 1);
+  border-width: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 146, 60, 0.6),
+    0 0 10px rgba(251, 146, 60, 0.35);
+}
+.swimlane-cell.is-sunset-first {
+  border-color: rgba(251, 146, 60, 1);
+  border-width: 4px;
+  box-shadow:
+    inset 0 0 0 2px rgba(251, 146, 60, 0.75),
+    0 0 14px rgba(251, 146, 60, 0.5);
+}
+.swimlane-cell.is-soldout {
+  opacity: 0.38;
+  background-image: repeating-linear-gradient(
+    135deg, transparent, transparent 3px,
+    rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px
+  );
+  cursor: default;
+}
+.swimlane-cell.is-low   { box-shadow: inset 0 -2px 0 rgba(255,255,255,0.6); }
+.swimlane-cell.is-high  { box-shadow: inset 0  2px 0 rgba(255,255,255,0.6); }
+
+/* Selected column: per-cell highlight (applied to all venue rows at selectedSlot) */
+.swimlane-cell.selected {
+  border-color: rgba(255,255,255,0.95);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.75),
+    0 0 0 3px rgba(201,168,76,0.35),
+    0 6px 16px rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+  filter: brightness(1.18) saturate(1.08);
+  z-index: 2;
+}
+.swimlane-cell.selected.empty,
+.swimlane-cell.selected.is-gap {
+  background: rgba(201,168,76,0.14);
+  filter: none;
+}
+
+/* Astronomical sunset line (behind cells) */
+.swimlane-sunset-line {
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  width: 1.5px;
+  background: linear-gradient(to bottom, transparent, rgba(224,122,48,0.85) 12%, rgba(224,122,48,0.85) 88%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.swimlane-sunset-line::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(224,122,48,0.95);
+  box-shadow: 0 0 8px rgba(224,122,48,0.8);
+}
+
+/* ── Detail bar (below swimlane) ────────────────────── */
+.swimlane-detail-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(201,168,76,0.04), rgba(201,168,76,0) 60%),
+    rgba(255,255,255,0.015);
+}
+.swimlane-detail-time-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 16px;
+  border-right: 1px solid var(--border);
+  min-width: 110px;
+}
+.swimlane-detail-time-label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.swimlane-detail-time {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+.swimlane-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(224,122,48,0.12);
+  border: 1px solid rgba(224,122,48,0.4);
+  color: #e8994a;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.swimlane-detail-venues {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.swimlane-detail-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 18px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  min-width: 130px;
+  position: relative;
+}
+.swimlane-detail-chip::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 8px; bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+.swimlane-detail-chip.esb::before    { background: var(--esb); }
+.swimlane-detail-chip.edge::before   { background: var(--edge); }
+.swimlane-detail-chip.summit::before { background: var(--summit); }
+.swimlane-detail-chip.totr::before   { background: var(--totr); }
+.swimlane-detail-chip .chip-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-left: 10px;
+}
+.swimlane-detail-chip.esb    .chip-name { color: var(--esb); }
+.swimlane-detail-chip.edge   .chip-name { color: var(--edge); }
+.swimlane-detail-chip.summit .chip-name { color: var(--summit); }
+.swimlane-detail-chip.totr   .chip-name { color: var(--totr); }
+.swimlane-detail-chip .chip-price {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  padding-left: 10px;
+  line-height: 1.15;
+}
+.swimlane-detail-chip .chip-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  padding-left: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.swimlane-detail-chip .chip-sub.up   { color: var(--up); }
+.swimlane-detail-chip .chip-sub.down { color: var(--down); }
+.swimlane-detail-chip.is-sunset-price {
+  border-color: rgba(224,122,48,0.55) !important;
+  background: rgba(224,122,48,0.06);
+  box-shadow: 0 0 0 1px rgba(224,122,48,0.15);
+}
+.swimlane-detail-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  align-self: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.swimlane-detail-nav kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 1px 5px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+/* Legend */
+.swimlane-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.66rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.swimlane-legend-col {
+  padding: 12px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.swimlane-legend-col + .swimlane-legend-col {
+  border-left: 1px solid rgba(255,255,255,0.05);
+}
+.swimlane-legend-heading {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.55);
+  margin-bottom: 2px;
+}
+.swimlane-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+/* Mini-cell swatches — match real cell dimensions */
+.legend-cell {
+  width: 16px;
+  height: 26px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.legend-cell.price-low {
+  background: color-mix(in srgb, rgb(172 142 220) 32%, transparent);
+}
+.legend-cell.price-high {
+  background: color-mix(in srgb, rgb(172 142 220) 88%, transparent);
+}
+.legend-cell.sunset-cell {
+  background: rgba(224,122,48,0.06);
+  border-color: rgba(224,122,48,0.75);
+  box-shadow: 0 0 0 1px rgba(224,122,48,0.18);
+}
+.legend-cell.soldout-cell {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.06);
+  opacity: 0.42;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 1px,
+    transparent 1px, transparent 5px
+  );
+}
+.legend-cell.gap-cell {
+  background: color-mix(in srgb, rgb(172 142 220) 11%, transparent);
+  opacity: 0.55;
+}
+.legend-price-arrow {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.25);
+}
+/* Keyboard hint */
+.legend-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: inherit;
+  line-height: 1;
+}
+/* Sunset-line swatch */
+.legend-sunset-line-swatch {
+  width: 2px;
+  height: 26px;
+  background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.65) 20%, rgba(201,168,76,0.65) 80%, transparent);
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+.swimlane-fallback-note {
+  padding: 0 20px 14px;
+  font-size: 0.66rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ── Light-theme overrides for legend swatches ────────────────
+   Base swatches use rgba(255,255,255,...) which disappears on
+   the cream background. Re-color using dark ink tones instead. */
+[data-theme="light"] .legend-cell {
+  border-color: rgba(42,30,18,0.20);
+}
+[data-theme="light"] .legend-cell.sunset-cell {
+  background: rgba(224,122,48,0.10);
+  border-color: rgba(224,122,48,0.85);
+  box-shadow: 0 0 0 1px rgba(224,122,48,0.28);
+}
+[data-theme="light"] .legend-cell.soldout-cell {
+  background: rgba(42,30,18,0.05);
+  border-color: rgba(42,30,18,0.22);
+  opacity: 1;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(42,30,18,0.42) 0px, rgba(42,30,18,0.42) 1px,
+    transparent 1px, transparent 5px
+  );
+}
+[data-theme="light"] .legend-cell.gap-cell {
+  background: rgba(172,142,220,0.22);
+  border-color: rgba(42,30,18,0.18);
+  opacity: 1;
+}
+[data-theme="light"] .legend-kbd {
+  background: rgba(42,30,18,0.06);
+  border-color: rgba(42,30,18,0.22);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .legend-sunset-line-swatch {
+  background: linear-gradient(to bottom, transparent, rgba(224,122,48,0.85) 20%, rgba(224,122,48,0.85) 80%, transparent);
+}
+
+@media (max-width: 960px) {
+  .venue-avg-row { grid-template-columns: 1fr; }
+  .sunset-filters { flex-direction: column; align-items: stretch; }
+  .dc-meta-row { display: none; }
+  .dc-peak { margin-left: 0; }
+  .venue-panels { grid-template-columns: 1fr; }
+  .swimlane-axis-row,
+  .swimlane-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .swimlane-axis-spacer { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-diamond-wrap" aria-hidden="true">
+          <div class="brand-diamond"></div>
+          <div class="brand-rule"></div>
+        </div>
+      </div>
+      <a href="index.html" class="sidebar-wordmark">ESBO</a>
+      <div class="sidebar-sub">Price Intelligence</div>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <div class="nav-section">
+        <span class="nav-label">Guide</span>
+        <a href="guide.html" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          Site Guide
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Analysis</span>
+        <a href="index.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+          Executive Overview
+        </a>
+        <a href="tracker.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="2" width="14" height="13" rx="1.5"/>
+            <line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+          </svg>
+          Price Tracker
+        </a>
+        <a href="sunset.html" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v1.5"/><path d="M12.24 4.76l-1.06 1.06"/>
+            <path d="M3.76 4.76l1.06 1.06"/><path d="M3 10h10"/><path d="M5 13h6"/>
+            <path d="M4.5 10A3.5 3.5 0 0 1 11.5 10"/><path d="M1 10h2M13 10h2"/>
+          </svg>
+          Sunset Analysis
+        </a>
+        <a href="trends.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 11 5 7 9 9 15 3"/>
+            <line x1="1" y1="15" x2="15" y2="15"/>
+          </svg>
+          Trends &amp; Patterns
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Reference</span>
+        <a href="methodology.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 1H3a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 3 15h10a1.5 1.5 0 0 0 1.5-1.5V7L9 1z"/>
+            <polyline points="9 1 9 7 14.5 7"/>
+            <line x1="5" y1="10" x2="11" y2="10"/><line x1="5" y1="12.5" x2="8.5" y2="12.5"/>
+          </svg>
+          Methodology
+        </a>
+        <a href="case-study.html" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 4h12M2 8h8M2 12h5"/>
+          </svg>
+          Case Study
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row">
+        <div class="status-dot live"></div>
+        <span class="status-label">Daily Refresh</span>
+      </div>
+      <div class="sidebar-ts" id="sidebarTs">Last updated: —</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Sunset Analysis</h1>
+        <span class="topbar-crumb">Sunset premium vs. noon baseline · 4 attractions</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate">—</span>
+      </div>
+    </header>
+
+    <div class="content" id="pageContent">
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        Loading price data
+      </div>
+    </div>
+  </div><!-- /.main -->
+</div><!-- /.app -->
+
+<script>
+'use strict';
+
+/* ── CONSTANTS ─────────────────────────────────────── */
+const ESB_SUNSET_GROUPS   = new Set(['Sunset', 'Twilight']);
+const ESB_BASELINE_GROUPS = new Set(['Opening', 'Pre-Sunset', 'Pre-Sunset 2']);
+const VENUE_KEYS          = ['esb', 'edge', 'summit', 'totr'];
+const VENUE_LABELS        = {
+  esb: 'ESB',
+  edge: 'Edge',
+  summit: 'Summit',
+  totr: 'TOTR'
+};
+const VENUE_RGB           = {
+  esb: '212 168 67',
+  edge: '100 178 218',
+  summit: '172 142 220',
+  totr: '80 192 148'
+};
+
+/* ── STATE ──────────────────────────────────────────── */
+let DATA      = {};      // { esb: [...], edge: [...], totr: [...] }
+let META_DATA = null;
+let INDEX     = {};      // { vk: { date: [rows] } }
+let ALL_DATES = [];
+let DAY_CACHE = {};
+let SUNSET_SELECTION = {};
+
+// Tracks the currently open/active date card so keyboard arrow nav knows which
+// card + travel date + slot array to step through. Set by toggleCard() when a
+// card opens and by renderHeatmapCardBody() on every render.
+let ACTIVE_CARD = { idx: null, travelDate: null, slots: [] };
+
+let filterMonth   = 'all';
+let filterWeek    = 'all';
+let filterDate    = 'all';
+let filterMinUp   = '';
+let filterMaxUp   = '';
+
+/* ── UTILITIES ──────────────────────────────────────── */
+function esc(v) {
+  return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function timeToMin(label) {
+  const m = String(label || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return 0;
+  let h = parseInt(m[1], 10), mn = parseInt(m[2], 10);
+  const ap = m[3].toUpperCase();
+  if (ap === 'PM' && h !== 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  return h * 60 + mn;
+}
+
+function minsToLabel(t) {
+  let h = Math.floor(t / 60), mn = t % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  if (h === 0) h = 12; else if (h > 12) h -= 12;
+  return h + ':' + String(mn).padStart(2,'0') + ' ' + ap;
+}
+
+function fmtPrice(cents) {
+  if (cents == null || isNaN(cents)) return '—';
+  return '$' + (cents / 100).toFixed(0);
+}
+
+function fmtDelta(cents) {
+  if (cents == null || isNaN(cents)) return '—';
+  const d = (cents / 100).toFixed(0);
+  return cents >= 0 ? '+$' + d : '-$' + Math.abs(d);
+}
+
+function fmtPct(cents, baseCents) {
+  if (!cents || !baseCents) return '—';
+  return ((cents / baseCents) * 100).toFixed(0) + '%';
+}
+
+function getMonthKey(d) { return d.slice(0, 7); }
+
+function getWeekKey(d) {
+  const dt = new Date(d + 'T12:00:00');
+  const off = (dt.getDay() + 6) % 7;
+  dt.setDate(dt.getDate() - off);
+  return dt.toISOString().slice(0, 10);
+}
+
+function fmtDateLong(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  });
+}
+
+function fmtMonthLabel(k) {
+  if (k === 'all') return 'All months';
+  return new Date(k + '-01T12:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function fmtWeekLabel(k) {
+  return 'Week of ' + new Date(k + 'T12:00:00').toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric'
+  });
+}
+
+function avg(arr) {
+  const v = arr.filter(x => x != null && !isNaN(x));
+  return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null;
+}
+
+// ── Standardized stats helpers (per UPSELL_METHODOLOGY.md) ────────────
+// Use median/modal/distribution instead of averages. All inputs are cents.
+function median(arr) {
+  const v = arr.filter(x => x != null && !isNaN(x)).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const mid = Math.floor(v.length / 2);
+  return v.length % 2 ? v[mid] : Math.round((v[mid - 1] + v[mid]) / 2);
+}
+function modalOf(arr) {
+  const counts = new Map();
+  arr.forEach(x => { if (x != null && !isNaN(x)) counts.set(x, (counts.get(x) || 0) + 1); });
+  if (!counts.size) return null;
+  let best = null, bestCt = -1;
+  counts.forEach((ct, v) => { if (ct > bestCt) { bestCt = ct; best = v; } });
+  return { value: best, count: bestCt, total: arr.length, pct: Math.round((bestCt / arr.length) * 100) };
+}
+function distributionOf(arr) {
+  const counts = new Map();
+  arr.forEach(x => { if (x != null && !isNaN(x)) counts.set(x, (counts.get(x) || 0) + 1); });
+  const total = arr.filter(x => x != null && !isNaN(x)).length;
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([value, count]) => ({ value, count, pct: Math.round((count / total) * 100) }));
+}
+// Noon reference = first priced tour time between 12:00 PM and 1:00 PM (720-780 min).
+// Used as the apples-to-apples sunset-premium baseline for TOR (per methodology doc).
+function getNoonPrice(pricedRows) {
+  if (!pricedRows || !pricedRows.length) return null;
+  const cand = pricedRows
+    .filter(r => r._mins >= 720 && r._mins <= 780 && r.price_cents != null)
+    .sort((a, b) => a._mins - b._mins);
+  return cand.length ? cand[0].price_cents : null;
+}
+
+/* ── NYC TIMEZONE (DST-aware) ────────────────────────── */
+// US DST runs from 2nd Sunday of March to 1st Sunday of November.
+// Returns true if the given YYYY-MM-DD local date is in EDT (UTC-4).
+function isNYCDaylightTime(dateStr) {
+  const [y, mo, da] = dateStr.split('-').map(Number);
+  if (mo < 3 || mo > 11) return false;
+  if (mo > 3 && mo < 11) return true;
+  // Compute the day-of-week for the 1st of the month (in UTC — day-of-week is TZ-invariant for a given calendar date).
+  const firstDow = new Date(Date.UTC(y, mo - 1, 1)).getUTCDay(); // 0=Sun
+  const firstSunday = 1 + ((7 - firstDow) % 7);
+  if (mo === 3) {
+    // DST begins on the 2nd Sunday of March
+    return da >= firstSunday + 7;
+  }
+  // mo === 11: DST ends on the 1st Sunday of November
+  return da < firstSunday;
+}
+function nycTZOffset(dateStr) { return isNYCDaylightTime(dateStr) ? -4 : -5; }
+function nycTZLabel(dateStr)  { return isNYCDaylightTime(dateStr) ? 'EDT' : 'EST'; }
+
+/* ── ASTRONOMICAL SUNSET (NOAA formula) ─────────────── */
+// Returns minutes-since-midnight for sunset at ESB's coordinates (local NYC time, DST-aware).
+function getSunsetMinutes(dateStr) {
+  const lat = 40.7489, lng = -73.968;
+  const tzOffset = nycTZOffset(dateStr);
+  const d = new Date(dateStr + 'T12:00:00Z');
+  const start = new Date(Date.UTC(d.getUTCFullYear(), 0, 0));
+  const dayOfYear = Math.round((d - start) / 86400000);
+  const gamma = (2 * Math.PI / 365) * (dayOfYear - 1);
+  const eqtime = 229.18 * (0.000075 + 0.001868*Math.cos(gamma) - 0.032077*Math.sin(gamma)
+    - 0.014615*Math.cos(2*gamma) - 0.04089*Math.sin(2*gamma));
+  const decl = (180/Math.PI) * (0.006918 - 0.399912*Math.cos(gamma) + 0.070257*Math.sin(gamma)
+    - 0.006758*Math.cos(2*gamma) + 0.000907*Math.sin(2*gamma)
+    - 0.002697*Math.cos(3*gamma) + 0.00148*Math.sin(3*gamma));
+  const latRad = lat * Math.PI / 180;
+  const declRad = decl * Math.PI / 180;
+  const cosHa = Math.cos(90.833 * Math.PI/180) / (Math.cos(latRad) * Math.cos(declRad))
+    - Math.tan(latRad) * Math.tan(declRad);
+  if (cosHa < -1 || cosHa > 1) return null;
+  const ha = Math.acos(cosHa) * (180 / Math.PI);
+  const solarNoonUTC = 720 - 4 * lng - eqtime;
+  return Math.round(solarNoonUTC + ha * 4 + tzOffset * 60);
+}
+
+function fmtOffsetFromSunset(windowStartMins, sunsetMins) {
+  if (windowStartMins == null || sunsetMins == null) return null;
+  const diff = windowStartMins - sunsetMins; // negative = window starts before sunset
+  const absDiff = Math.abs(Math.round(diff));
+  const h = Math.floor(absDiff / 60);
+  const m = absDiff % 60;
+  const label = h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
+  return diff <= 0 ? `${label} before sunset` : `${label} after sunset`;
+}
+
+function bucketToQuarter(mins) {
+  return Math.floor(mins / 15) * 15;
+}
+
+function minsToCompactLabel(mins) {
+  return minsToLabel(mins)
+    .replace(':00', '')
+    .replace(' AM', 'a')
+    .replace(' PM', 'p')
+    .toLowerCase();
+}
+
+function buildSlotMap(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const slot = bucketToQuarter(r._mins);
+    const existing = map[slot];
+    if (!existing || (r.price_cents != null && r.price_cents < existing.price_cents)) {
+      map[slot] = r;
+    }
+  });
+  return map;
+}
+
+function buildHeatmapSlots(metrics) {
+  const set = new Set();
+  metrics.forEach(m => {
+    if (m.noData) return;
+    m.pricedRows.forEach(r => set.add(bucketToQuarter(r._mins)));
+  });
+  return [...set].sort((a, b) => a - b);
+}
+
+function renderHeatmapCardBody(travelDate, cardIdx) {
+  const metrics = getDayMetrics(travelDate);
+  const slots = buildHeatmapSlots(metrics);
+  if (!slots.length) {
+    return '<div class="empty-state">No tour time data available.</div>';
+  }
+  // Record which card is currently rendering — keyboard nav reads this.
+  ACTIVE_CARD = { idx: cardIdx, travelDate, slots };
+
+  const metricsByVenue = Object.fromEntries(metrics.map(m => [m.vk, m]));
+  const astroMins = getSunsetMinutes(travelDate);
+  const astroLabel = astroMins != null ? minsToLabel(astroMins) + ' ' + nycTZLabel(travelDate) : null;
+  const defaultSlot = metricsByVenue.esb?.firstSunset ? bucketToQuarter(metricsByVenue.esb.firstSunset._mins) : slots[0];
+
+  let selectedSlot = SUNSET_SELECTION[travelDate] ?? defaultSlot;
+  if (!slots.includes(selectedSlot)) {
+    selectedSlot = slots.reduce((best, slot) =>
+      Math.abs(slot - defaultSlot) < Math.abs(best - defaultSlot) ? slot : best, slots[0]);
+  }
+  SUNSET_SELECTION[travelDate] = selectedSlot;
+
+  const astroPct = astroMins != null && slots.length > 1
+    ? Math.max(0, Math.min(100, ((astroMins - slots[0]) / (slots[slots.length - 1] - slots[0])) * 100))
+    : null;
+
+  const axis = `<div class="swimlane-axis-row">
+    <div class="swimlane-axis-spacer">${slots.length} tour times · 15-min grid</div>
+    <div class="swimlane-axis" style="grid-template-columns:repeat(${slots.length}, minmax(0, 1fr));">
+      ${slots.map((slot, idx) => {
+        const show = idx === 0 || idx === slots.length - 1 || slot % 60 === 0;
+        return `<span class="swimlane-axis-label">${show ? esc(minsToCompactLabel(slot)) : ''}</span>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // Build fill-forwarded slotMaps for all venues up front so the detail bar can reuse them.
+  const filledSlotMaps = {};
+  const fillGapMins = Infinity;
+  VENUE_KEYS.forEach(vk => {
+    const m = metricsByVenue[vk];
+    const rawSlotMap = m?.noData ? {} : buildSlotMap(m.pricedRows);
+    const slotMap = { ...rawSlotMap };
+    let lastRow = null, lastRowMins = null;
+    slots.forEach(t => {
+      const raw = rawSlotMap[t];
+      if (raw) { lastRow = raw; lastRowMins = t; }
+      else if (lastRow && (t - lastRowMins) <= fillGapMins) { slotMap[t] = lastRow; }
+    });
+    filledSlotMaps[vk] = slotMap;
+  });
+
+  const laneRows = VENUE_KEYS.map(vk => {
+    const m = metricsByVenue[vk];
+    const rawSlotMap = m?.noData ? {} : buildSlotMap(m.pricedRows);
+    const slotMap = filledSlotMaps[vk];
+
+    // Sunset check is row-based (not slot-based) so fill-forwarded cells
+    // inherit the sunset flag from their source row. Bucketed fallback was
+    // removed — it caused false positives when two tour times collide in
+    // the same 15-min bucket and buildSlotMap stored the non-sunset row.
+    const sunsetRowSet = new Set(m?.sunsetRows || []);
+    const low = m?.dayLowRow?.price_cents ?? null;
+    const high = m?.peakRow?.price_cents ?? null;
+    const rangeLabel = m && !m.noData && low != null && high != null ? `${fmtPrice(low)}-${fmtPrice(high)}` : 'No data';
+    const firstSunsetLabel = m && !m.noData && m.firstSunset ? minsToLabel(bucketToQuarter(m.firstSunset._mins)) : '—';
+
+    // Build last-known-price lookup for gap cell display.
+    // Scans rawSlotMap (pre-fill-forward) so we can show "last seen" price for true gaps.
+    const lastKnownBySlot = {};
+    let lkRow = null;
+    slots.forEach(t => {
+      if (rawSlotMap[t]) lkRow = rawSlotMap[t];
+      lastKnownBySlot[t] = lkRow;
+    });
+
+    let sunsetFirstSeen = false;
+    const cells = slots.map(slot => {
+      const row = slotMap[slot];
+      if (!row) {
+        const hint = lastKnownBySlot[slot];
+        if (hint) {
+          const hintPrice = fmtPrice(hint.price_cents);
+          return `<button type="button" class="swimlane-cell is-gap"
+            style="background:color-mix(in srgb, rgb(${VENUE_RGB[vk]}) 11%, transparent)"
+            onclick="selectSunsetSlot(${cardIdx}, '${travelDate}', ${slot})"
+            title="${esc(minsToLabel(slot))} · no availability · last ${esc(hintPrice)}"></button>`;
+        }
+        return `<button type="button" class="swimlane-cell empty" title="${esc(minsToLabel(slot))} · no data"></button>`;
+      }
+      const mixPct = 60; // flat venue color — no gradient
+      const isSoldOut = row.raw_status === 'sold_out';
+      const isSunset = sunsetRowSet.has(row);
+      const isFirstSunset = isSunset && !sunsetFirstSeen;
+      if (isFirstSunset) sunsetFirstSeen = true;
+      const classes = [
+        'swimlane-cell',
+        isSoldOut ? 'is-soldout' : '',
+        slot === selectedSlot ? 'selected' : '',
+        isSunset ? 'is-sunset' : '',
+        isFirstSunset ? 'is-sunset-first' : '',
+        !isSoldOut && low != null && row.price_cents === low && high !== low ? 'is-low' : '',
+        !isSoldOut && high != null && row.price_cents === high && high !== low ? 'is-high' : ''
+      ].filter(Boolean).join(' ');
+      return `<button type="button"
+        class="${classes}"
+        style="background:color-mix(in srgb, rgb(${VENUE_RGB[vk]}) ${mixPct.toFixed(1)}%, transparent)"
+        onclick="selectSunsetSlot(${cardIdx}, '${travelDate}', ${slot})"
+        title="${esc(minsToLabel(slot) + ' · ' + fmtPrice(row.price_cents))}"></button>`;
+    }).join('');
+
+    return `<div class="swimlane-row">
+      <div class="swimlane-row-label ${vk}">
+        <div class="swimlane-row-name"><span class="swimlane-dot"></span>${esc(META_DATA?.venues?.[vk]?.short || VENUE_LABELS[vk])}</div>
+        <div class="swimlane-row-meta">${esc(rangeLabel)} · first sunset ${esc(firstSunsetLabel)}</div>
+      </div>
+      <div class="swimlane-track-shell">
+        ${astroPct != null ? `<div class="swimlane-sunset-line" style="left:calc(${astroPct}% - 1px)"></div>` : ''}
+        <div class="swimlane-track" style="grid-template-columns:repeat(${slots.length}, minmax(0, 1fr));">${cells}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const selectedDetails = VENUE_KEYS.map(vk => {
+    const m = metricsByVenue[vk];
+    const slotMap = filledSlotMaps[vk];
+    const row = slotMap[selectedSlot];
+    // Delta against noon = canonical baseline per UPSELL_METHODOLOGY.md
+    const noonCents = m ? getNoonPrice(m.pricedRows) : null;
+    const delta = row && noonCents != null ? row.price_cents - noonCents : null;
+    // Row-based sunset check so fill-forwarded rows inherit the sunset flag
+    // from their source tour time (handles Summit's :00/:30 → :15/:45 case).
+    const sunsetRowSet = new Set(m?.sunsetRows || []);
+    const isSunsetSlot = row ? sunsetRowSet.has(row) : false;
+    const subLabel = isSunsetSlot
+      ? 'sunset window'
+      : (delta != null ? fmtDelta(delta) + ' vs noon' : 'no data');
+    return `<span class="swimlane-detail-chip ${vk}${isSunsetSlot ? ' is-sunset-price' : ''}">
+      <span class="chip-name">${esc(META_DATA?.venues?.[vk]?.short || VENUE_LABELS[vk])}</span>
+      <span class="chip-price">${row ? esc(fmtPrice(row.price_cents)) : '—'}</span>
+      <span class="chip-sub">${esc(subLabel)}</span>
+    </span>`;
+  }).join('');
+
+  const anySunset = VENUE_KEYS.some(vk => {
+    const m = metricsByVenue[vk];
+    if (!m || m.noData) return false;
+    // Check the fill-forwarded row at this slot — row reference preserved
+    // through fill-forward so Summit :15/:45 still picks up sunset state.
+    const row = filledSlotMaps[vk][selectedSlot];
+    return row ? (m.sunsetRows || []).includes(row) : false;
+  });
+
+  const fallbackVenues = VENUE_KEYS
+    .map(vk => metricsByVenue[vk])
+    .filter(m => m && m.isFallback)
+    .map(m => `${VENUE_LABELS[m.vk]} using ${m.srcDate}`);
+
+  return `<div class="swimlane-wrap">
+    <div class="swimlane-topbar">
+      <span class="mhb-title">${slots.length} tour times · 15-min grid</span>
+      ${astroLabel ? `<span class="mhb-astro">🌇 Sunset ${esc(astroLabel)}</span>` : ''}
+    </div>
+    <div class="swimlane-scroll">
+      ${axis}
+      ${laneRows}
+    </div>
+    <div class="swimlane-detail-bar">
+      <div class="swimlane-detail-time-block">
+        <div class="swimlane-detail-time-label">Tour Time</div>
+        <div class="swimlane-detail-time">${esc(minsToLabel(selectedSlot))}</div>
+        ${anySunset ? '<span class="swimlane-detail-badge">🌇 Sunset window</span>' : ''}
+      </div>
+      <div class="swimlane-detail-venues">
+        ${selectedDetails}
+      </div>
+      <div class="swimlane-detail-nav" aria-label="Keyboard navigation">
+        <kbd>←</kbd><kbd>→</kbd><span>navigate</span>
+      </div>
+    </div>
+    <div class="swimlane-legend">
+      <div class="swimlane-legend-col">
+        <div class="swimlane-legend-heading">Cell Legend</div>
+        <div class="swimlane-legend-item">
+          <span class="legend-cell sunset-cell"></span>
+          Orange border = sunset window
+        </div>
+        <div class="swimlane-legend-item">
+          <span class="legend-cell soldout-cell"></span>
+          Striped = sold out
+        </div>
+        <div class="swimlane-legend-item">
+          <span class="legend-cell gap-cell"></span>
+          Faint = no data (hover shows last price)
+        </div>
+      </div>
+      <div class="swimlane-legend-col">
+        <div class="swimlane-legend-heading">Navigation</div>
+        <div class="swimlane-legend-item">
+          <kbd class="legend-kbd">click</kbd>
+          Select tour time (prices update below)
+        </div>
+        <div class="swimlane-legend-item">
+          <kbd class="legend-kbd">←</kbd>
+          <kbd class="legend-kbd">→</kbd>
+          Arrow keys step through tour times
+        </div>
+        <div class="swimlane-legend-item">
+          <span class="legend-sunset-line-swatch"></span>
+          Vertical line = NOAA astronomical sunset
+        </div>
+      </div>
+    </div>
+    ${fallbackVenues.length ? `<div class="swimlane-fallback-note">Fallback data: ${esc(fallbackVenues.join(' · '))}</div>` : ''}
+  </div>`;
+}
+
+function selectSunsetSlot(cardIdx, travelDate, mins) {
+  SUNSET_SELECTION[travelDate] = mins;
+  ACTIVE_CARD.idx = cardIdx;
+  ACTIVE_CARD.travelDate = travelDate;
+  const body = document.getElementById(`dc-body-${cardIdx}`);
+  if (body) body.innerHTML = renderHeatmapCardBody(travelDate, cardIdx);
+}
+
+// Arrow-key navigation: steps the selected slot left/right through the active
+// card's tour time grid. Ignored if no card is open, if user is typing in an
+// input, or if slots array is empty.
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+  const tag = (ev.target && ev.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  const { idx, travelDate, slots } = ACTIVE_CARD;
+  if (idx == null || !travelDate || !slots || !slots.length) return;
+  const cardEl = document.getElementById('dc-' + idx);
+  if (!cardEl || !cardEl.classList.contains('open')) return;
+  const current = SUNSET_SELECTION[travelDate] ?? slots[0];
+  let pos = slots.indexOf(current);
+  if (pos === -1) pos = 0;
+  const next = ev.key === 'ArrowLeft'
+    ? Math.max(0, pos - 1)
+    : Math.min(slots.length - 1, pos + 1);
+  if (next === pos) return;
+  ev.preventDefault();
+  selectSunsetSlot(idx, travelDate, slots[next]);
+});
+
+/* ── DATA ENGINE ────────────────────────────────────── */
+function buildIndex() {
+  INDEX = {};
+  const allDates = new Set();
+  VENUE_KEYS.forEach(vk => {
+    INDEX[vk] = {};
+    (DATA[vk] || []).forEach(row => {
+      if (!INDEX[vk][row.travel_date]) INDEX[vk][row.travel_date] = [];
+      INDEX[vk][row.travel_date].push(row);
+      allDates.add(row.travel_date);
+    });
+  });
+  ALL_DATES = [...allDates].sort();
+}
+
+function getNearestDate(vk, d) {
+  const keys = Object.keys(INDEX[vk] || {}).sort();
+  if (!keys.length) return null;
+  if (keys.includes(d)) return d;
+  const next = keys.find(k => k > d);
+  return next || keys[keys.length - 1];
+}
+
+function getPricedRows(vk, travelDate) {
+  const srcDate = getNearestDate(vk, travelDate);
+  const rows = INDEX[vk][srcDate] || [];
+  const deduped = {};
+  rows.forEach(row => {
+    const key = row.tour_time;
+    const existing = deduped[key];
+    if (!existing) { deduped[key] = row; return; }
+    const ep = existing.price_cents != null && existing.raw_status !== 'sold_out';
+    const np = row.price_cents != null && row.raw_status !== 'sold_out';
+    if (np && !ep) deduped[key] = row;
+    else if (np && ep && row.price_cents < existing.price_cents) deduped[key] = row;
+  });
+  return Object.values(deduped)
+    .filter(r => r.price_cents != null)
+    // ESB Premium Early Access is the SAME GA ticket at a premium for the
+    // earliest morning tour times — not a separate product. Excluded from
+    // the sunset upsell math because no competitor offers a comparable
+    // premium early-morning product; there is no like-for-like benchmark.
+    .filter(r => !(vk === 'esb' && r.tour_group === 'Early Access'))
+    .map(r => ({ ...r, _mins: timeToMin(r.tour_time), _srcDate: srcDate }))
+    .sort((a, b) => a._mins - b._mins);
+}
+
+// Threshold-based sunset detection. Finds the longest contiguous run of
+// afternoon (15:00–22:00) tour times priced at or above the day's "elevated"
+// threshold = floor + max($5, 50% of the floor→peak span). Catches full
+// ramps (Edge, TOR) rather than just the peak cluster, while keeping cliff-
+// priced venues (Summit) cleanly scoped to the elevated band. Returns
+// [startMin, endMin] or null when the afternoon is flat.
+function detectSunsetRange(pricesByTime) {
+  const afternoon = pricesByTime
+    .filter(([m, p]) => m >= 900 && m <= 1320 && p != null)
+    .sort((a, b) => a[0] - b[0]);
+  if (!afternoon.length) return null;
+  const prices = afternoon.map(([, p]) => p);
+  const floor = Math.min(...prices);
+  const peak  = Math.max(...prices);
+  if (peak === floor) return null;
+  const threshold = Math.max(floor + 500, floor + Math.round((peak - floor) * 0.5));
+  let bestStart = null, bestEnd = null, bestLen = 0;
+  let curStart = null, curEnd = null, curLen = 0;
+  for (const [m, p] of afternoon) {
+    if (p >= threshold) {
+      if (curStart == null) curStart = m;
+      curEnd = m; curLen++;
+    } else if (curStart != null) {
+      if (curLen > bestLen) { bestStart = curStart; bestEnd = curEnd; bestLen = curLen; }
+      curStart = curEnd = null; curLen = 0;
+    }
+  }
+  if (curStart != null && curLen > bestLen) { bestStart = curStart; bestEnd = curEnd; }
+  return bestStart == null ? null : [bestStart, bestEnd];
+}
+
+function getSunsetRows(vk, pricedRows) {
+  if (vk === 'esb') {
+    // Primary: use tour_group label (Sunset/Twilight).
+    // Fallback: if tour_group was not captured (scraper regression on some
+    // scrape dates), treat any ESB tour time after noon priced at $56+ as
+    // sunset — matches the observed Sunset/Twilight price band ($56/$58/$62).
+    return pricedRows.filter(r =>
+      ESB_SUNSET_GROUPS.has(r.tour_group) ||
+      (r.tour_group == null && r._mins >= 720 && r.price_cents >= 5600)
+    );
+  }
+  const range = detectSunsetRange(pricedRows.map(r => [r._mins, r.price_cents]));
+  if (!range) return [];
+  return pricedRows.filter(r => r._mins >= range[0] && r._mins <= range[1]);
+}
+
+function buildVenueMetric(vk, travelDate) {
+  const pricedRows = getPricedRows(vk, travelDate);
+  if (!pricedRows.length) return { vk, travelDate, noData: true };
+
+  const sunsetRows  = getSunsetRows(vk, pricedRows);
+  const firstSunset = sunsetRows[0] || null;
+
+  const dayLowRow   = [...pricedRows].sort((a, b) => a.price_cents - b.price_cents || a._mins - b._mins)[0];
+  const peakRow     = [...pricedRows].sort((a, b) => b.price_cents - a.price_cents || a._mins - b._mins)[0];
+  const highSunset  = sunsetRows.length ? [...sunsetRows].sort((a, b) => b.price_cents - a.price_cents)[0] : null;
+  const lowSunset   = sunsetRows.length ? [...sunsetRows].sort((a, b) => a.price_cents - b.price_cents)[0] : null;
+
+  // Noon baseline = 12:00 PM tour time (or first priced row 720–780 min).
+  // Exists on 100% of dates for all four venues; canonical upsell baseline
+  // per UPSELL_METHODOLOGY.md.
+  const noonCents = getNoonPrice(pricedRows);
+  const noonRow   = noonCents != null
+    ? pricedRows.find(r => r._mins >= 720 && r._mins <= 780 && r.price_cents === noonCents) || null
+    : null;
+
+  // Immediate baseline = last priced row before sunset range starts
+  const preRows      = firstSunset ? pricedRows.filter(r => r._mins < firstSunset._mins) : [];
+  const baselineRow  = preRows.length ? preRows[preRows.length - 1] : null;
+
+  // CANONICAL UPSELL = sunset peak − noon (per UPSELL_METHODOLOGY.md)
+  const noonUpsell = (noonCents != null && highSunset)
+    ? highSunset.price_cents - noonCents : null;
+  // Secondary metrics — kept for back-reference only, not the headline number
+  const immediateUpsell = (baselineRow && firstSunset)
+    ? firstSunset.price_cents - baselineRow.price_cents : null;
+  const fullLift = (dayLowRow && highSunset)
+    ? highSunset.price_cents - dayLowRow.price_cents : null;
+
+  const srcDate = pricedRows[0]?._srcDate || travelDate;
+
+  return {
+    vk, travelDate, noData: false,
+    pricedRows, sunsetRows,
+    firstSunset, highSunset, lowSunset,
+    dayLowRow, peakRow, baselineRow, noonRow,
+    noonUpsell, immediateUpsell, fullLift,
+    srcDate,
+    isFallback: srcDate !== travelDate
+  };
+}
+
+function getDayMetrics(travelDate) {
+  if (DAY_CACHE[travelDate]) return DAY_CACHE[travelDate];
+  const result = VENUE_KEYS.map(vk => buildVenueMetric(vk, travelDate));
+  DAY_CACHE[travelDate] = result;
+  return result;
+}
+
+/* ── FILTER HELPERS ─────────────────────────────────── */
+function getFilteredDates() {
+  return ALL_DATES.filter(d => {
+    if (filterDate !== 'all' && d !== filterDate) return false;
+    if (filterMonth !== 'all' && getMonthKey(d) !== filterMonth) return false;
+    if (filterWeek  !== 'all' && getWeekKey(d)  !== filterWeek)  return false;
+    // ESB upsell filter — canonical noon-baseline rule
+    if (filterMinUp !== '' || filterMaxUp !== '') {
+      const metrics = getDayMetrics(d);
+      const esb = metrics.find(m => m.vk === 'esb');
+      if (!esb || esb.noData) return false;
+      const upsell = esb.noonUpsell;
+      if (upsell == null) return false;
+      const dollars = upsell / 100;
+      if (filterMinUp !== '' && dollars < parseFloat(filterMinUp)) return false;
+      if (filterMaxUp !== '' && dollars > parseFloat(filterMaxUp)) return false;
+    }
+    return true;
+  });
+}
+
+/* ── RENDER: KPI STAT GRID ───────────────────────────── */
+function renderStatGrid(filteredDates) {
+  // Standardized rule (UPSELL_METHODOLOGY.md):
+  //   upsell = max(price in detected sunset band) − noon price (12:00 PM tour time)
+  // Same date, same venue. GA only. Reported as median + modal + distribution.
+  // Recomputed on every filter change via applyFilters().
+  const perVenue = { esb: { upsells: [], noons: [], peaks: [] }, edge: { upsells: [], noons: [], peaks: [] }, summit: { upsells: [], noons: [], peaks: [] }, totr: { upsells: [], noons: [], peaks: [] } };
+  filteredDates.forEach(d => {
+    getDayMetrics(d).forEach(m => {
+      if (m.noData || m.noonUpsell == null || !perVenue[m.vk]) return;
+      perVenue[m.vk].upsells.push(Math.round(m.noonUpsell / 100) * 100);
+      if (m.noonRow) perVenue[m.vk].noons.push(m.noonRow.price_cents);
+      if (m.highSunset) perVenue[m.vk].peaks.push(m.highSunset.price_cents);
+    });
+  });
+
+  function venueCard(vk) {
+    const data = perVenue[vk];
+    const label = META_DATA?.venues?.[vk]?.short || VENUE_LABELS[vk];
+    if (!data.upsells.length) {
+      return `<div class="stat-card">
+        <div class="stat-label" style="color:var(--${vk})">${esc(label)}</div>
+        <div class="stat-value" style="color:var(--text-dim);font-size:16px;">No data</div>
+        <div class="stat-sub">0 dates</div>
+      </div>`;
+    }
+    const medUpsell = median(data.upsells);
+    const medNoon = data.noons.length ? median(data.noons) : null;
+    // Derive sunset price from noon + upsell so the arithmetic always checks out
+    const displaySunset = medNoon != null ? medNoon + medUpsell : null;
+    const fmtP = c => '$' + (c / 100).toFixed(0);
+
+    return `<div class="stat-card">
+      <div class="stat-label" style="color:var(--${vk})">${esc(label)}</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin:4px 0 2px;">
+        <span style="font-size:13px;color:var(--text-dim);">${medNoon ? fmtP(medNoon) : '?'}</span>
+        <span style="font-size:11px;color:var(--text-dim);">→</span>
+        <span style="font-size:13px;color:var(--text-primary);font-weight:600;">${displaySunset ? fmtP(displaySunset) : '?'}</span>
+      </div>
+      <div class="stat-value gold">${esc(fmtDelta(medUpsell))}</div>
+      <div class="stat-sub">sunset premium · ${data.upsells.length} dates</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:3px;">noon → sunset (median)</div>
+    </div>`;
+  }
+
+  const ruleBanner = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid #fb923c;border-radius:8px;padding:12px 16px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#fb923c;margin-bottom:4px;">How the sunset premium is calculated</div>
+      <div style="font-size:12.5px;color:var(--text-primary);line-height:1.55;">
+        For each date, take the <strong>12:00 PM GA price</strong> (what a noon visitor pays) and the <strong>highest sunset-window GA price</strong> (what a sunset visitor pays). The difference is the <strong>sunset premium</strong>: how much more each attraction charges for the same product at sunset vs. midday. All four attractions are measured the same way.
+      </div>
+    </div>`;
+
+  return ruleBanner + `<div class="stat-row" style="margin-bottom:24px;">
+    ${venueCard('esb')}${venueCard('edge')}${venueCard('summit')}${venueCard('totr')}
+  </div>`;
+}
+
+/* ── RENDER: PER-VENUE STRUCTURE CARDS (standardized, no averages) ──
+   Each card surfaces the standardized day-floor rule inputs and outputs
+   per UPSELL_METHODOLOGY.md: day floor (modal), noon price (modal),
+   peak range, median + modal upsell, and a bucket distribution. */
+function renderVenueAvgCards(filteredDates) {
+  const buckets = { esb: [], edge: [], summit: [], totr: [] };
+  filteredDates.forEach(d => {
+    getDayMetrics(d).forEach(m => {
+      if (m.noData || !buckets[m.vk]) return;
+      buckets[m.vk].push(m);
+    });
+  });
+
+  function makeCard(vk) {
+    const ms = buckets[vk];
+    const label = META_DATA?.venues?.[vk]?.short || VENUE_LABELS[vk];
+    if (!ms.length) return `<div class="venue-avg-card ${vk}">
+      <div class="vac-name">${esc(label)}</div>
+      <div class="vac-price" style="font-size:14px;color:var(--text-dim)">No data</div>
+    </div>`;
+
+    // Round every stat to whole dollars (cents) so bucketing is stable.
+    const R = c => Math.round(c / 100) * 100;
+
+    // Sunset-tier prices (filtered to actual sunset rows, not the whole day).
+    // For ESB this uses Sunset/Twilight tour groups — excludes Early Access.
+    const sunsetPeaks = ms.map(m => m.highSunset ? R(m.highSunset.price_cents) : null).filter(x => x != null);
+    const sunsetLows  = ms.map(m => m.lowSunset  ? R(m.lowSunset.price_cents)  : null).filter(x => x != null);
+
+    // CANONICAL UPSELL (headline): sunset peak − noon.
+    const upsells = ms.map(m => m.noonUpsell != null ? R(m.noonUpsell) : null).filter(x => x != null);
+
+    // LOW-TIER UPSELL: lowest sunset price − noon. Shows the minimum margin the
+    // venue earns even on the cheapest sunset slot of the day.
+    const lowUpsells = ms.map(m => {
+      if (!m.lowSunset) return null;
+      const noon = getNoonPrice(m.pricedRows);
+      if (noon == null) return null;
+      return R(m.lowSunset.price_cents - noon);
+    }).filter(x => x != null);
+
+    // SHOULDER UPSELL: first sunset price − last pre-sunset tour time.
+    // The price jump a guest pays to step one tour time from shoulder into sunset.
+    const shoulderUpsells = ms.map(m => m.immediateUpsell != null ? R(m.immediateUpsell) : null).filter(x => x != null);
+
+    const peakModal = modalOf(sunsetPeaks);
+    const lowModal  = modalOf(sunsetLows);
+    const medUp     = median(upsells);
+    const modUp     = modalOf(upsells);
+    const medLow    = median(lowUpsells);
+    const medShoulder = median(shoulderUpsells);
+
+    // Distribution bar — % of ALL sunset tour times at each price point (not one per date).
+    const allSunsetPrices = ms.flatMap(m => (m.sunsetRows || [])
+      .filter(r => r.price_cents != null)
+      .map(r => R(r.price_cents)));
+    const dist = distributionOf(allSunsetPrices).slice(0, 5);
+    const maxPct = dist.length ? Math.max(...dist.map(d => d.pct)) : 0;
+    const distHtml = dist.map(b => {
+      const w = maxPct ? Math.round((b.pct / maxPct) * 100) : 0;
+      const isMode = peakModal && b.value === peakModal.value;
+      return `
+        <div class="dist-row${isMode ? ' is-mode' : ''}">
+          <div class="dist-val">${esc(fmtPrice(b.value))}</div>
+          <div class="dist-bar-wrap"><div class="dist-bar ${vk}" style="width:${w}%"></div></div>
+          <div class="dist-ct">${b.pct}%</div>
+        </div>`;
+    }).join('');
+
+    return `<div class="venue-avg-card ${vk}">
+      <div class="vac-name">${esc(label)}</div>
+      <div class="vac-main">
+        <div class="vac-price">${esc(fmtDelta(medUp))}</div>
+        <div class="vac-label">median peak upsell vs. noon · modal ${modUp ? esc(fmtDelta(modUp.value)) + ' (' + modUp.pct + '%)' : '—'}</div>
+      </div>
+      <div class="vac-grid">
+        <div class="vac-stat">
+          <div class="vac-stat-label">Sunset Peak</div>
+          <div class="vac-stat-val">${esc(fmtPrice(peakModal?.value))}${peakModal ? ` <span style="font-size:10px;color:var(--text-dim);">${peakModal.pct}%</span>` : ''}</div>
+        </div>
+        <div class="vac-stat">
+          <div class="vac-stat-label">Sunset Low</div>
+          <div class="vac-stat-val">${esc(fmtPrice(lowModal?.value))}${lowModal ? ` <span style="font-size:10px;color:var(--text-dim);">${lowModal.pct}%</span>` : ''}</div>
+        </div>
+        <div class="vac-stat">
+          <div class="vac-stat-label">Low-Tier Upsell</div>
+          <div class="vac-stat-val">${esc(fmtDelta(medLow))}<span style="font-size:10px;color:var(--text-dim);font-weight:500;"> vs noon</span></div>
+        </div>
+        <div class="vac-stat">
+          <div class="vac-stat-label">Shoulder Upsell</div>
+          <div class="vac-stat-val">${esc(fmtDelta(medShoulder))}<span style="font-size:10px;color:var(--text-dim);font-weight:500;"> vs pre-sunset</span></div>
+        </div>
+      </div>
+      <div class="vac-dist">
+        <div class="vac-dist-label">Sunset price distribution</div>
+        ${distHtml}
+      </div>
+      <div class="vac-n">n = ${allSunsetPrices.length} sunset tour time${allSunsetPrices.length !== 1 ? 's' : ''}</div>
+    </div>`;
+  }
+
+  return `<div class="section-header">
+    <span class="section-title">Per-Attraction Structure</span>
+    <span class="section-count">${filteredDates.length} dates · noon-baseline rule</span>
+  </div>
+  <div class="venue-avg-row">
+    ${makeCard('esb')}${makeCard('edge')}${makeCard('summit')}${makeCard('totr')}
+  </div>`;
+}
+
+/* ── RENDER: DATE CARDS ─────────────────────────────── */
+function renderDateCards(filteredDates) {
+  if (!filteredDates.length) {
+    return `<div class="empty-state">No dates match current filters.</div>`;
+  }
+
+  function chip(m) {
+    if (!m || m.noData || !m.firstSunset) return `<span class="dc-chip neutral">${esc(VENUE_LABELS[m?.vk || ''] || '—')} —</span>`;
+    // Canonical noon-baseline upsell (peak − 12:00 PM price), same rule every venue.
+    const upsell = m.noonUpsell;
+    return `<span class="dc-chip ${m.vk}">${esc(VENUE_LABELS[m.vk])} ${esc(fmtDelta(upsell))}</span>`;
+  }
+
+  function cardHtml(d, i) {
+    const ms   = getDayMetrics(d);
+    const esb  = ms.find(m => m.vk === 'esb');
+    const edge = ms.find(m => m.vk === 'edge');
+    const summit = ms.find(m => m.vk === 'summit');
+    const totr = ms.find(m => m.vk === 'totr');
+    const ePeakStr = (esb && !esb.noData && esb.firstSunset) ? fmtPrice(esb.firstSunset.price_cents) : '—';
+
+    // Astronomical sunset for this date
+    const astroMins = getSunsetMinutes(d);
+    const astroLabel = astroMins != null ? minsToLabel(astroMins) + ' ' + nycTZLabel(d) : null;
+    const esbStartMins = (esb && !esb.noData && esb.firstSunset) ? esb.firstSunset._mins : null;
+    const offsetLabel = fmtOffsetFromSunset(esbStartMins, astroMins);
+
+    // Chip in header showing sunset time offset
+    const astroHeaderChip = astroLabel
+      ? `<span class="astro-offset-chip">🌇 ${esc(astroLabel)}</span>` : '';
+
+    // Context bar for card body
+    const astroBar = (astroLabel && offsetLabel)
+      ? `<div class="sunset-astro-bar">
+          🌇 <strong>Astronomical sunset ${esc(astroLabel)}</strong>
+          <span class="astro-sep">·</span>
+          ESB window starts <strong>${esc(offsetLabel)}</strong>
+         </div>` : '';
+
+    return `<div class="date-card" id="dc-${i}" data-travel-date="${esc(d)}">
+      <div class="date-card-header" onclick="toggleCard(${i})">
+        <div class="date-card-toggle">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 3 11 8 6 13"/>
+          </svg>
+        </div>
+        <div class="dc-date">${esc(fmtDateLong(d))}</div>
+        <div class="dc-meta-row">
+          ${chip(esb)}${chip(edge)}${chip(summit)}${chip(totr)}
+          ${astroHeaderChip}
+        </div>
+        <div class="dc-peak">ESB sunset <strong>${esc(ePeakStr)}</strong></div>
+      </div>
+      <div class="date-card-body" id="dc-body-${i}">
+        ${astroBar}
+        ${renderHeatmapCardBody(d, i)}
+      </div>
+    </div>`;
+  }
+
+  return `<div class="section-header">
+    <span class="section-title">By Travel Date</span>
+    <span class="section-count">${filteredDates.length} date${filteredDates.length !== 1 ? 's' : ''}</span>
+  </div>
+  <div class="date-cards-list">
+    ${filteredDates.map((d, i) => cardHtml(d, i)).join('')}
+  </div>`;
+}
+
+/* ── TOGGLE ─────────────────────────────────────────── */
+function toggleCard(i) {
+  const el = document.getElementById('dc-' + i);
+  if (!el) return;
+  const wasOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!wasOpen) {
+    // Card just opened — mark it as the active keyboard target.
+    // renderHeatmapCardBody() has already populated slots for this card on
+    // initial render, but we also set idx/travelDate here in case the user
+    // opens a card that was previously rendered.
+    const travelDate = el.getAttribute('data-travel-date');
+    if (travelDate) {
+      ACTIVE_CARD.idx = i;
+      ACTIVE_CARD.travelDate = travelDate;
+    }
+  }
+}
+
+/* ── FILTER BAR ─────────────────────────────────────── */
+function buildFilterBar() {
+  const months  = [...new Set(ALL_DATES.map(getMonthKey))].sort();
+  const weeks   = [...new Set(ALL_DATES.map(getWeekKey))].sort();
+
+  const monthOpts = ['<option value="all">All months</option>',
+    ...months.map(m => `<option value="${esc(m)}"${filterMonth===m?' selected':''}>${esc(fmtMonthLabel(m))}</option>`)
+  ].join('');
+  const weekOpts = ['<option value="all">All weeks</option>',
+    ...weeks.map(w => `<option value="${esc(w)}"${filterWeek===w?' selected':''}>${esc(fmtWeekLabel(w))}</option>`)
+  ].join('');
+  const dateOpts = ['<option value="all">All dates</option>',
+    ...ALL_DATES.map(d => `<option value="${esc(d)}"${filterDate===d?' selected':''}>${esc(fmtDateLong(d))}</option>`)
+  ].join('');
+
+  const chip = buildFilterChip();
+
+  return `<div class="sunset-filters" id="filterBar">
+    <div class="filter-group">
+      <label>Month</label>
+      <div class="select-wrap">
+        <select id="fMonth" onchange="handleFilter('month',this.value)">${monthOpts}</select>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Week</label>
+      <div class="select-wrap">
+        <select id="fWeek" onchange="handleFilter('week',this.value)">${weekOpts}</select>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Travel Date</label>
+      <div class="select-wrap">
+        <select id="fDate" onchange="handleFilter('date',this.value)">${dateOpts}</select>
+      </div>
+    </div>
+    <div class="filter-chip" id="filterChip">${chip}</div>
+    <button onclick="clearFilters()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:0.72rem;padding:4px 10px;cursor:pointer;white-space:nowrap;letter-spacing:0.04em;">✕ Clear</button>
+  </div>`;
+}
+
+function buildFilterChip() {
+  const parts = [];
+  if (filterMonth !== 'all') parts.push(fmtMonthLabel(filterMonth));
+  if (filterWeek  !== 'all') parts.push(fmtWeekLabel(filterWeek));
+  if (filterDate  !== 'all') parts.push(fmtDateLong(filterDate));
+  if (filterMinUp !== '')     parts.push('Upsell ≥ $' + filterMinUp);
+  if (filterMaxUp !== '')     parts.push('Upsell ≤ $' + filterMaxUp);
+  const filtered = getFilteredDates();
+  const dateSuffix = filtered.length + ' date' + (filtered.length !== 1 ? 's' : '');
+  return (parts.length ? parts.join(' · ') + ' · ' : '') + dateSuffix;
+}
+
+function handleFilter(type, val) {
+  if      (type === 'month') filterMonth = val;
+  else if (type === 'week')  filterWeek  = val;
+  else if (type === 'date')  filterDate  = val;
+  else if (type === 'minUp') filterMinUp = val;
+  else if (type === 'maxUp') filterMaxUp = val;
+  applyFilters();
+}
+
+function clearFilters() {
+  filterMonth = 'all'; filterWeek = 'all'; filterDate = 'all';
+  filterMinUp = ''; filterMaxUp = '';
+  const fb = document.getElementById('filterBar');
+  if (fb) fb.outerHTML = buildFilterBar();
+  applyFilters();
+}
+
+/* ── SUNSET PRICING COMPARISON (interactive) ───────── */
+let OPP_DATA = [];
+let OPP_SORT = { col: 'date', dir: 'asc' };
+let OPP_VIEW = 'day';       // 'day' | 'week' | 'time'
+let OPP_RANK = 'all';       // 'all' | 'lowest' | 'not-lowest' | 'highest'
+let OPP_DOW  = 'all';       // 'all' | '0'–'6'
+let OPP_TIME = 1110;        // default 6:30 PM = 1110 mins
+let OPP_AVAIL_TIMES = [];   // populated from data
+
+function buildOppData(filteredDates) {
+  const dayRows = [];
+  filteredDates.forEach(d => {
+    const metrics = getDayMetrics(d);
+    const row = { date: d, esb: null, edge: null, summit: null, totr: null };
+    metrics.forEach(m => {
+      if (m.noData || !m.highSunset) return;
+      row[m.vk] = Math.round(m.highSunset.price_cents / 100);
+    });
+    if (row.esb == null) return;
+    const prices = [row.esb, row.edge, row.summit, row.totr].filter(v => v != null);
+    row.rank = [...prices].sort((a, b) => a - b).indexOf(row.esb) + 1;
+    row.isLowest = row.rank === 1;
+    row.gap = Math.min(...prices.filter(v => v != null && v !== row.esb), 9999) - row.esb;
+    if (row.gap === 9999) row.gap = 0;
+    const dt = new Date(d + 'T12:00:00');
+    row.dow = dt.getDay();
+    row.dowLabel = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][row.dow];
+    row.label = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const mondayOff = row.dow === 0 ? -6 : 1 - row.dow;
+    const mon = new Date(dt); mon.setDate(mon.getDate() + mondayOff);
+    row.weekKey = mon.toISOString().slice(0, 10);
+    dayRows.push(row);
+  });
+  return dayRows;
+}
+
+function buildTimeRows(filteredDates, targetMins) {
+  // For each date, find each venue's price at the target tour time (exact or nearest within 15 min)
+  const rows = [];
+  filteredDates.forEach(d => {
+    const row = { date: d, esb: null, edge: null, summit: null, totr: null, time: null };
+    VENUE_KEYS.forEach(vk => {
+      const pricedRows = getPricedRows(vk, d);
+      // Find exact or nearest within ±15 min
+      let best = null, bestDist = 999;
+      pricedRows.forEach(r => {
+        const dist = Math.abs(r._mins - targetMins);
+        if (dist <= 15 && dist < bestDist) { best = r; bestDist = dist; }
+      });
+      if (best && best.price_cents) {
+        row[vk] = Math.round(best.price_cents / 100);
+        if (vk === 'esb') row.time = best._mins;
+      }
+    });
+    if (row.esb == null) return;
+    const prices = [row.esb, row.edge, row.summit, row.totr].filter(v => v != null);
+    row.rank = [...prices].sort((a, b) => a - b).indexOf(row.esb) + 1;
+    row.isLowest = row.rank === 1;
+    row.gap = Math.min(...prices.filter(v => v != null && v !== row.esb), 9999) - row.esb;
+    if (row.gap === 9999) row.gap = 0;
+    const dt = new Date(d + 'T12:00:00');
+    row.dow = dt.getDay();
+    row.dowLabel = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][row.dow];
+    row.label = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const mondayOff = row.dow === 0 ? -6 : 1 - row.dow;
+    const mon = new Date(dt); mon.setDate(mon.getDate() + mondayOff);
+    row.weekKey = mon.toISOString().slice(0, 10);
+    rows.push(row);
+  });
+  return rows;
+}
+
+function aggregateWeekRows(dayRows) {
+  const buckets = {};
+  dayRows.forEach(r => {
+    if (!buckets[r.weekKey]) buckets[r.weekKey] = { dates: [], esb: [], edge: [], summit: [], totr: [] };
+    buckets[r.weekKey].dates.push(r.date);
+    if (r.esb != null) buckets[r.weekKey].esb.push(r.esb);
+    if (r.edge != null) buckets[r.weekKey].edge.push(r.edge);
+    if (r.summit != null) buckets[r.weekKey].summit.push(r.summit);
+    if (r.totr != null) buckets[r.weekKey].totr.push(r.totr);
+  });
+  const weekRows = [];
+  Object.keys(buckets).sort().forEach(wk => {
+    const b = buckets[wk];
+    const avg = arr => arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : null;
+    const row = {
+      date: wk, weekKey: wk,
+      esb: avg(b.esb), edge: avg(b.edge), summit: avg(b.summit), totr: avg(b.totr),
+      dow: -1, dowLabel: '',
+      label: new Date(wk + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      nDates: b.dates.length
+    };
+    if (row.esb == null) return;
+    const prices = [row.esb, row.edge, row.summit, row.totr].filter(v => v != null);
+    row.rank = [...prices].sort((a, b2) => a - b2).indexOf(row.esb) + 1;
+    row.isLowest = row.rank === 1;
+    row.gap = Math.min(...prices.filter(v => v != null && v !== row.esb), 9999) - row.esb;
+    if (row.gap === 9999) row.gap = 0;
+    weekRows.push(row);
+  });
+  return weekRows;
+}
+
+function buildAvailableTimes(filteredDates) {
+  // Find common afternoon tour times across ESB data (15:00–22:00)
+  const timeCounts = {};
+  filteredDates.forEach(d => {
+    const rows = getPricedRows('esb', d);
+    rows.forEach(r => {
+      if (r._mins >= 900 && r._mins <= 1320 && r.price_cents) {
+        timeCounts[r._mins] = (timeCounts[r._mins] || 0) + 1;
+      }
+    });
+  });
+  // Only show times that appear on at least 10% of dates
+  const threshold = Math.max(1, Math.floor(filteredDates.length * 0.1));
+  return Object.entries(timeCounts)
+    .filter(([, ct]) => ct >= threshold)
+    .map(([m]) => parseInt(m))
+    .sort((a, b) => a - b);
+}
+
+function getOppSourceRows() {
+  if (OPP_VIEW === 'time') {
+    return buildTimeRows(getFilteredDates(), OPP_TIME);
+  }
+  return OPP_DATA;
+}
+
+function getOppRows() {
+  let source = getOppSourceRows();
+  let rows = OPP_VIEW === 'week' ? aggregateWeekRows(source) : [...source];
+  if (OPP_VIEW !== 'week' && OPP_DOW !== 'all') {
+    rows = rows.filter(r => String(r.dow) === OPP_DOW);
+  }
+  if (OPP_RANK === 'lowest') rows = rows.filter(r => r.rank === 1);
+  else if (OPP_RANK === 'not-lowest') rows = rows.filter(r => r.rank > 1);
+  else if (OPP_RANK === 'highest') rows = rows.filter(r => r.rank >= 3);
+  const { col, dir } = OPP_SORT;
+  const mult = dir === 'asc' ? 1 : -1;
+  rows.sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (col === 'date' || col === 'label') { va = a.date; vb = b.date; }
+    return va < vb ? -1 * mult : va > vb ? 1 * mult : 0;
+  });
+  return rows;
+}
+
+function renderOppTable() {
+  const rows = getOppRows();
+  const source = getOppSourceRows();
+  const allRows = OPP_VIEW === 'week' ? aggregateWeekRows(source) : source;
+  const lowestCount = allRows.filter(r => r.isLowest).length;
+  const totalCount = allRows.length;
+
+  const dateLabel = OPP_VIEW === 'week' ? 'Week' : 'Date';
+  const cols = [
+    { key: 'date', label: dateLabel },
+    { key: 'esb', label: 'ESB', color: 'var(--esb)' },
+    { key: 'edge', label: 'Edge', color: 'var(--edge)' },
+    { key: 'summit', label: 'Summit', color: 'var(--summit)' },
+    { key: 'totr', label: 'TOR', color: 'var(--totr)' },
+    { key: 'gap', label: 'Gap to Next' },
+    { key: 'rank', label: 'ESB Rank' }
+  ];
+
+  let html = '<table class="opp-table"><thead><tr>';
+  cols.forEach(c => {
+    const isSorted = OPP_SORT.col === c.key;
+    const arrow = isSorted ? (OPP_SORT.dir === 'asc' ? '▲' : '▼') : '▲';
+    const cls = isSorted ? ' class="sorted"' : '';
+    const style = c.color ? ` style="color:${c.color}"` : '';
+    html += `<th${cls}${style} data-col="${c.key}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  if (!rows.length) {
+    html += '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px;">No dates match filters</td></tr>';
+  }
+
+  rows.forEach(r => {
+    const prices = [r.esb, r.edge, r.summit, r.totr].filter(v => v != null);
+    const minP = Math.min(...prices);
+    const maxP = Math.max(...prices);
+
+    function pc(vk, val) {
+      if (val == null) return '<td style="color:var(--text-dim);">—</td>';
+      const isMin = val === minP && prices.length > 1;
+      const isMax = val === maxP && prices.length > 1 && maxP !== minP;
+      let s = '';
+      if (vk === 'esb') {
+        if (isMin) s = ' style="color:var(--up);font-weight:700;"';
+        else if (isMax) s = ' style="color:var(--down);font-weight:700;"';
+        else s = ' style="font-weight:600;"';
+      } else {
+        if (isMax) s = ' style="color:var(--text-primary);font-weight:600;"';
+      }
+      return '<td' + s + '>$' + val + '</td>';
+    }
+
+    const rankLabel = r.rank === 1 ? 'Lowest' : r.rank === 2 ? '2nd' : r.rank === 3 ? '3rd' : '4th';
+    const rankColor = r.rank === 1 ? 'var(--up)' : r.rank >= 3 ? 'var(--down)' : 'var(--text-secondary)';
+    const gapStr = r.gap > 0 ? '−$' + r.gap : r.gap < 0 ? '+$' + Math.abs(r.gap) : '$0';
+    const gapCls = r.gap > 0 ? 'neg' : r.gap < 0 ? 'pos' : '';
+
+    let dateCell;
+    if (OPP_VIEW === 'week') dateCell = `<td>${esc(r.label)}<span class="opp-dow">${r.nDates}d</span></td>`;
+    else dateCell = `<td>${esc(r.label)}<span class="opp-dow">${esc(r.dowLabel)}</span></td>`;
+
+    const rowCls = !r.isLowest ? ' class="opp-highlight"' : '';
+
+    html += `<tr${rowCls}>
+      ${dateCell}
+      ${pc('esb', r.esb)}
+      ${pc('edge', r.edge)}
+      ${pc('summit', r.summit)}
+      ${pc('totr', r.totr)}
+      <td><span class="opp-gap ${gapCls}">${gapStr}</span></td>
+      <td style="color:${rankColor};font-weight:600;">${rankLabel}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+
+  // Update summary
+  const summaryCount = document.getElementById('oppSummaryCount');
+  if (summaryCount) {
+    const unit = OPP_VIEW === 'week' ? 'weeks' : 'dates';
+    summaryCount.textContent = totalCount + ' ' + unit;
+  }
+  const chipEl = document.getElementById('oppChip');
+  if (chipEl) {
+    chipEl.textContent = rows.length + ' of ' + totalCount + ' shown';
+  }
+
+  return html;
+}
+
+function renderWeeklyOpportunity(filteredDates) {
+  OPP_DATA = buildOppData(filteredDates);
+  OPP_AVAIL_TIMES = buildAvailableTimes(filteredDates);
+  if (!OPP_DATA.length) return '';
+
+  // Make sure selected time exists in data
+  if (OPP_VIEW === 'time' && OPP_AVAIL_TIMES.length && !OPP_AVAIL_TIMES.includes(OPP_TIME)) {
+    // Default to nearest available sunset-area time (~6:30 PM)
+    OPP_TIME = OPP_AVAIL_TIMES.reduce((best, t) => Math.abs(t - 1110) < Math.abs(best - 1110) ? t : best, OPP_AVAIL_TIMES[0]);
+  }
+
+  const source = getOppSourceRows();
+  const allRows = OPP_VIEW === 'week' ? aggregateWeekRows(source) : source;
+  const lowestCount = allRows.filter(r => r.isLowest).length;
+  const totalCount = allRows.length;
+  const unit = OPP_VIEW === 'week' ? 'weeks' : 'dates';
+
+  // DOW filter (day + time views)
+  const showDow = OPP_VIEW !== 'week';
+  const dowOpts = showDow ? `
+    <span class="opp-toolbar-label">Day</span>
+    <select class="opp-select" id="oppDow" onchange="OPP_DOW=this.value;document.getElementById('oppTableWrap').innerHTML=renderOppTable();wireOppSort();">
+      <option value="all">All days</option>
+      <option value="0"${OPP_DOW==='0'?' selected':''}>Sun</option>
+      <option value="1"${OPP_DOW==='1'?' selected':''}>Mon</option>
+      <option value="2"${OPP_DOW==='2'?' selected':''}>Tue</option>
+      <option value="3"${OPP_DOW==='3'?' selected':''}>Wed</option>
+      <option value="4"${OPP_DOW==='4'?' selected':''}>Thu</option>
+      <option value="5"${OPP_DOW==='5'?' selected':''}>Fri</option>
+      <option value="6"${OPP_DOW==='6'?' selected':''}>Sat</option>
+    </select>
+    <div class="opp-toolbar-sep"></div>` : '';
+
+  // Tour time picker (time view only)
+  const timeOpts = OPP_VIEW === 'time' ? `
+    <span class="opp-toolbar-label">Tour Time</span>
+    <select class="opp-select" id="oppTime" onchange="OPP_TIME=parseInt(this.value);document.getElementById('oppTableWrap').innerHTML=renderOppTable();wireOppSort();">
+      ${OPP_AVAIL_TIMES.map(t => `<option value="${t}"${t===OPP_TIME?' selected':''}>${minsToLabel(t)}</option>`).join('')}
+    </select>
+    <div class="opp-toolbar-sep"></div>` : '';
+
+  return `<details class="opp-panel" id="oppDetails">
+    <summary class="opp-summary-bar">
+      <div class="opp-summary-left">
+        <span class="opp-panel-title">Sunset Pricing Comparison</span>
+        <span class="opp-panel-count" id="oppSummaryCount">${totalCount} ${unit}</span>
+      </div>
+      <svg class="opp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 4 10 8 6 12"/></svg>
+    </summary>
+    <div class="opp-panel-body">
+      <div class="opp-toolbar" id="oppToolbar">
+        <span class="opp-toolbar-label">View</span>
+        <div class="opp-toggle-group">
+          <button class="opp-toggle-btn${OPP_VIEW==='day'?' active':''}" onclick="OPP_VIEW='day';refreshOppPanel();">By Date</button>
+          <button class="opp-toggle-btn${OPP_VIEW==='time'?' active':''}" onclick="OPP_VIEW='time';refreshOppPanel();">By Tour Time</button>
+          <button class="opp-toggle-btn${OPP_VIEW==='week'?' active':''}" onclick="OPP_VIEW='week';refreshOppPanel();">By Week</button>
+        </div>
+        <div class="opp-toolbar-sep"></div>
+        ${timeOpts}${dowOpts}
+        <span class="opp-toolbar-label">Show</span>
+        <select class="opp-select" id="oppRank" onchange="OPP_RANK=this.value;document.getElementById('oppTableWrap').innerHTML=renderOppTable();wireOppSort();">
+          <option value="all">All ${unit}</option>
+          <option value="lowest"${OPP_RANK==='lowest'?' selected':''}>ESB lowest</option>
+          <option value="not-lowest"${OPP_RANK==='not-lowest'?' selected':''}>ESB not lowest</option>
+          <option value="highest"${OPP_RANK==='highest'?' selected':''}>ESB highest</option>
+        </select>
+        <span class="opp-chip" id="oppChip">${totalCount} of ${totalCount} shown</span>
+      </div>
+      <div id="oppTableWrap">${renderOppTable()}</div>
+    </div>
+  </details>`;
+}
+
+function refreshOppPanel() {
+  const el = document.getElementById('weeklyOpp');
+  if (!el) return;
+  const filtered = getFilteredDates();
+  el.innerHTML = renderWeeklyOpportunity(filtered);
+  wireOppSort();
+}
+
+function wireOppSort() {
+  const table = document.querySelector('#oppTableWrap .opp-table');
+  if (!table) return;
+  table.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (OPP_SORT.col === col) {
+        OPP_SORT.dir = OPP_SORT.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        OPP_SORT.col = col;
+        OPP_SORT.dir = col === 'date' ? 'asc' : 'desc';
+      }
+      document.getElementById('oppTableWrap').innerHTML = renderOppTable();
+      wireOppSort();
+    });
+  });
+}
+
+/* ── APPLY FILTERS ──────────────────────────────────── */
+function applyFilters() {
+  const chip = document.getElementById('filterChip');
+  if (chip) chip.textContent = buildFilterChip();
+
+  const filtered = getFilteredDates();
+
+  const sg = document.getElementById('statGrid');
+  if (sg) sg.outerHTML = '<div id="statGrid">' + renderStatGrid(filtered) + '</div>';
+  const sg2 = document.getElementById('statGrid');
+  if (sg2) sg2.innerHTML = renderStatGrid(filtered);
+
+  const opp = document.getElementById('weeklyOpp');
+  if (opp) { opp.innerHTML = renderWeeklyOpportunity(filtered); wireOppSort(); }
+
+  const va = document.getElementById('venueAvgs');
+  if (va) va.innerHTML = renderVenueAvgCards(filtered);
+
+  const dc = document.getElementById('dateCards');
+  if (dc) dc.innerHTML = renderDateCards(filtered);
+}
+
+/* ── INIT ───────────────────────────────────────────── */
+async function init() {
+  try {
+    const [eSBData, edgeData, summitData, totrData, metaRes] = await Promise.all([
+      fetch('data/prices_latest_esb.json',  { cache: 'no-store' }).then(r => r.json()),
+      fetch('data/prices_latest_edge.json', { cache: 'no-store' }).then(r => r.json()),
+      fetch('data/prices_latest_summit.json', { cache: 'no-store' }).then(r => r.json()),
+      fetch('data/prices_latest_totr.json', { cache: 'no-store' }).then(r => r.json()),
+      fetch('data/meta.json',               { cache: 'no-store' }).then(r => r.json()),
+    ]);
+
+    DATA      = { esb: eSBData, edge: edgeData, summit: summitData, totr: totrData };
+    META_DATA = metaRes;
+
+    buildIndex();
+
+    // Update timestamps
+    const ts = META_DATA?.built_at || META_DATA?.scrape_date || null;
+    if (ts) {
+      const label = new Date(ts).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+      const el = document.getElementById('sidebarTs');
+      if (el) el.textContent = 'Last updated: ' + label;
+      const dt = document.getElementById('topbarDate');
+      if (dt) dt.textContent = label;
+    }
+
+    const filtered = getFilteredDates();
+
+    document.getElementById('pageContent').innerHTML = `
+      ${buildFilterBar()}
+      <div id="venueAvgs">${renderVenueAvgCards(filtered)}</div>
+      <div id="statGrid">${renderStatGrid(filtered)}</div>
+      <div id="weeklyOpp">${renderWeeklyOpportunity(filtered)}</div>
+      <div id="dateCards">${renderDateCards(filtered)}</div>
+    `;
+
+    wireOppSort();
+
+  } catch (err) {
+    console.error('Sunset init error:', err);
+    document.getElementById('pageContent').innerHTML = `
+      <div class="loading-state" style="color:var(--down);">
+        Data load failed. Verify data files are accessible.
+        <span style="font-size:11px;color:var(--text-dim);">${esc(String(err))}</span>
+      </div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="chat-widget.js" defer></script>
+<script src="theme-toggle.js" defer></script>
+</body>
+</html>
